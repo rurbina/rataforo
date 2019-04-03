@@ -1,0 +1,5 @@
+[% INCLUDE header.template %]
+
+<p>[% board.name %]</p>
+
+[% INCLUDE footer.template %]
