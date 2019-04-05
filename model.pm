@@ -9,7 +9,7 @@ sub new {
 	my $s = { dbh => undef, };
 
 	$s->{dbh} = DBI->connect(
-		"dbi:SQLite:dbname=/Users/rurbina/Sync/Rataforo/rataforo.db", "", "",
+		"dbi:SQLite:dbname=rataforo.db", "", "",
 		{
 			RaiseError => 1,
 			PrintError => 0,
