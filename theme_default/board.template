@@ -1,8 +1,9 @@
 <h1>[% board.title %]</h1>
 
-[% foreach thread = board.threads %]
-<h2>[% thread.subject %]</h2>
-[% end %]
+<ul>
+[% FOREACH thread = board.threads %]
+<li><a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject %]</a></li>
+[% END %]
+</ul>
 
-[% include post.template %]
-
+[% INCLUDE post.template %]

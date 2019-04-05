@@ -1,8 +1,11 @@
-<h1>[% thread.subject %]</h1>
-[% thread.message %]
+<section>
+	<h1>[% thread.subject %]</h1>
+	<article>[% thread.message %]</article>
+</section>
 
-[% foreach reply = thread.replies %]
-[% reply.message %]
-[% end %]
+[% FOREACH reply = thread.replies %]
+<article>[% reply.message %]</article>
+[% END %]
 
-[% include reply.template %]
+[% INCLUDE reply.template %]
+

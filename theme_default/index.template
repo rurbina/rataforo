@@ -1,6 +1,12 @@
 <h1>[% site.title %]</h1>
 
-[% foreach board = boards %]
-<h2>[% board.title %]</h2>
-[% end %]
+<div>[% site.description %]</div>
 
+[% FOREACH board = boards %]
+<section class="index_board">
+	<h1><a href="/board/[% board.board_id %]">[% board.title %]</a></h1>
+	<article>[% board.description %]</article>
+</section>
+[% END %]
+
+[% dumper(env) %]

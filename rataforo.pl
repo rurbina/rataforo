@@ -4,6 +4,7 @@ use utf8;
 use common::sense;
 use Switch qw(Perl6);
 use Data::Dumper qw(Dumper);
+$Data::Dumper::Sortkeys = 1;
 use lib '.';
 use controller;
 
@@ -17,23 +18,26 @@ my $app = sub {
 	$headers = { 'Content-Type' => 'text/html' };
 	$data;
 
-	given ( $env->{PATH_INFO} ) {
-		when '/' {
-			$env->{PATH_INFO} = '/index';
-			next
-		}
-		when m!^/[^/]+! {
+	my @trace;
+	$env->{trace} = \@trace;
 
+	given ( $env->{PATH_INFO} ) {
+		when m!^/[^/]*! {
+
+			$env->{PATH_INFO} = '/index' if $env->{PATH_INFO} eq '/';
+			
 			my ( $method, @params ) = ( $env->{PATH_INFO} =~ m!^/([^/]+)(/[^/]+)*$! );
 			map { $_ =~ s!^/!! } @params;
 
-			my $c = controller->new();
+			push @trace, 'in $env->{PATH_INFO}';
+
+			my $c = controller->new($env);
 
 			if ( exists &{ "controller::$method" } ) {
 				$data = $c->$method(@params) || &error500($method);
 			}
 			else {
-				$data = &error404($method);
+				$data = &error404({ method => $method, params => \@params });
 			}
 
 		}
@@ -66,8 +70,9 @@ sub index {
 
 sub error404 {
 
+	my $dump = Dumper(\@_);
 	$status = 404;
-	return "<html><body><h1>404 Not Found: $_[0]</h1></body></html>\n";
+	return "<html><body><h1>404 Not Found</h1><pre>$dump</pre></body></html>\n";
 
 }
 
