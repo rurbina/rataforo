@@ -4,6 +4,7 @@ use utf8;
 use common::sense;
 use Switch qw(Perl6);
 use Data::Dumper qw(Dumper);
+use lib '.';
 use controller;
 
 my ( $status, $headers, $data );

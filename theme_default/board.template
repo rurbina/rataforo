@@ -1,5 +1,8 @@
-[% INCLUDE header.template %]
+<h1>[% board.title %]</h1>
 
-<p>[% board.name %]</p>
+[% foreach thread = board.threads %]
+<h2>[% thread.subject %]</h2>
+[% end %]
 
-[% INCLUDE footer.template %]
+[% include post.template %]
+

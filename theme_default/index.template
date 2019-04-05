@@ -1,0 +1,6 @@
+<h1>[% site.title %]</h1>
+
+[% foreach board = boards %]
+<h2>[% board.title %]</h2>
+[% end %]
+

@@ -1,0 +1,5 @@
+<h2>[% s('new_reply') %]</h2>
+<form method="post" action="/new_reply">
+<textarea name="message"></textarea>
+<input type="submit" value="[% s('do_reply') %]">
+</form>

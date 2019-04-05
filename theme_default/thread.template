@@ -1,0 +1,8 @@
+<h1>[% thread.subject %]</h1>
+[% thread.message %]
+
+[% foreach reply = thread.replies %]
+[% reply.message %]
+[% end %]
+
+[% include reply.template %]
