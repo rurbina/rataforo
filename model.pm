@@ -1,7 +1,7 @@
 package model;
 
 use utf8;
-use DBD::Sqlite;
+use DBD::SQLite;
 use DBI;
 
 sub new {
@@ -61,7 +61,7 @@ sub get_boards {
 	my $sql = qq{
 	select board_id, title, description
 	    from boards
-	    where true
+	    where 1=1
 	    $sql_board_id
 	    order by sort asc, title asc
 	};
@@ -100,7 +100,7 @@ sub get_threads {
 	my $sql = qq{
 	select thread_id,board_id,author,subject,message,timestamp
 	    from threads
-	    where true
+	    where 1=1
 	    $sql_board_id
 	    $sql_thread_id
 	    order by timestamp asc, thread_id asc
@@ -163,7 +163,7 @@ sub get_replies {
 	my $sql = qq{
 	select thread_id,reply_id,author,message,timestamp
 	    from replies
-	    where true
+	    where 1=1
 	    $sql_thread_id
 	    order by timestamp asc, thread_id asc
 	};
