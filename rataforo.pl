@@ -7,6 +7,10 @@ use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 use lib '.';
 use controller;
+use output;
+use Plack::Request;
+use Try::Tiny;
+use Encode;
 
 my ( $status, $headers, $data );
 
@@ -23,23 +27,7 @@ my $app = sub {
 
 	given ( $env->{PATH_INFO} ) {
 		when m!^/[^/]*! {
-
-			$env->{PATH_INFO} = '/index' if $env->{PATH_INFO} eq '/';
-			
-			my ( $method, @params ) = ( $env->{PATH_INFO} =~ m!^/([^/]+)(/[^/]+)*$! );
-			map { $_ =~ s!^/!! } @params;
-
-			push @trace, 'in $env->{PATH_INFO}';
-
-			my $c = controller->new($env);
-
-			if ( exists &{ "controller::$method" } ) {
-				$data = $c->$method(@params) || &error500($method);
-			}
-			else {
-				$data = &error404({ method => $method, params => \@params });
-			}
-
+			$data = &dispatch($env);
 		}
 		default {
 			$status = 404;
@@ -47,9 +35,47 @@ my $app = sub {
 		}
 	}
 
-	return [ $status, \@{%{$headers}}, [$data] ];
+	my $utf8_data = encode_utf8($data);
+	
+	return [ $status, \@{%{$headers}}, [$utf8_data] ];
 
 };
+
+sub dispatch {
+
+	my ($env) = @_;
+
+	my $data;
+	
+	$env->{PATH_INFO} = '/index' if $env->{PATH_INFO} eq '/';
+	
+	my ( undef, $method, @params ) = split '/', $env->{PATH_INFO};
+
+	my $req = Plack::Request->new($env);
+
+	my $c = controller->new( $env, $req );
+	my $m = $c->can($method);
+
+	if ( exists &{"controller::$method"} ) {
+
+		$data = $c->$method(@params);
+
+		if ( !defined($data) ) {
+			my $out = output->new();
+			$data = $out->template( filename => $method, data => $c->{d} );
+		}
+		if ( ref($data) eq 'HASH' ) {
+			my $out = output->new();
+			$data = $out->template( filename => $method, data => $data );
+		}
+	}
+	else {
+		$data = &error404( { method => $method, params => \@params } );
+	}
+
+	return $data;
+	
+}
 
 # set or replace a header
 sub set_header {
@@ -78,7 +104,8 @@ sub error404 {
 
 sub error500 {
 
+	my $dump = Dumper(\@_);
 	$status = 500;
-	return "<html><body><h1>500 Internal Server Error: $_[0]</h1></body></html>\n";
+	return "<html><body><h1>500 Internal Server Error</h1><pre>$dump</pre></body></html>\n";
 
 }

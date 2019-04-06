@@ -1,24 +1,30 @@
 package controller;
 
+use common::sense;
 use output;
 use model;
+use Data::Dumper qw(Dumper);
+$Data::Dumper::Sortkeys = 1;
 
 sub new {
 
-	my ( $class, $env ) = @_;
+	my ( $class, $env, $req ) = @_;
 
 	my $self = {
 		out => output->new(),
 		m   => model->new(),
 		d   => {
 			env => $env,
+			trail => undef,
 		},
+		r => $req,
 	};
 
 	$self->{d}->{site} = $self->{m}->get_site();
 
 	$env->{title} = $self->{d}->{site}->{title};
 
+	
 	bless $self;
 
 }
@@ -40,6 +46,23 @@ sub set_title {
 
 }
 
+sub push_trail {
+
+	my ( $s, @items ) = @_;
+
+	if ( !$s->{d}->{trail} ) {
+		$s->{d}->{trail} = [
+			{
+				title => $s->{d}->{site}->{title},
+				href  => '/',
+			},
+		];
+	}
+
+	push @{ $s->{d}->{trail} }, @items;
+
+}
+
 sub index {
 
 	my ($s) = @_;
@@ -48,7 +71,7 @@ sub index {
 
 	$s->set_title( $s->l('board_index') );
 
-	$s->{out}->template( data => $s->{d} );
+	return;
 
 }
 
@@ -60,8 +83,9 @@ sub board {
 	  or die 'board not found';
 
 	$s->set_title( $s->{d}->{board}->{title} );
+	$s->push_trail( { href => qq{/board/$board_id}, title => $s->{d}->{board}->{title} } );
 
-	$s->{out}->template( data => $s->{d} );
+	return;
 
 }
 
@@ -72,9 +96,40 @@ sub thread {
 	$s->{d}->{thread} = $s->{m}->get_thread( thread_id => $thread_id, get_replies => 1 )
 	  or die 'thread not found';
 
-	$s->{d}->{board} = $s->{m}->get_board( board_id => $d->{s}->{thread}->{board_id} );
+	$s->{d}->{board} = $s->{m}->get_board( board_id => $s->{d}->{thread}->{board_id} );
 
-	$s->{out}->template( data => $s->{d} );
+	$s->push_trail(
+		{ href => qq{/board/$board_id}, title => $s->{d}->{board}->{title} },
+		{ href => qq{/thread/$board_id/$thread_id}, title => $s->{d}->{thread}->{subject} },
+	);
+
+	return;
+
+}
+
+sub login {
+
+	return;
+
+}
+
+sub new_thread {
+
+	my ($s) = @_;
+
+	my $p = $s->{r}->parameters();
+
+	return $s->dumper( $s->{r}->parameters() );
+
+}
+
+sub dumper {
+
+	my ( $s, $data ) = @_;
+
+	$s->{d}->{data} = $data;
+
+	$s->{out}->template( filename => 'dumper', title => 'Dumper', data => $s->{d} );
 
 }
 

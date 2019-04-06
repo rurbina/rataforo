@@ -1,0 +1,7 @@
+<nav class="trail">
+[% FOREACH i = items %]
+	<a href="[% i.href %]">[% i.title %]</a>
+[% END %]
+</nav>
+
+[% dumper(items) %]

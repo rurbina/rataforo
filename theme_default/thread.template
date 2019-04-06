@@ -1,11 +1,18 @@
-<section>
+<section class="thread">
 	<h1>[% thread.subject %]</h1>
 	<article>[% thread.message %]</article>
 </section>
 
 [% FOREACH reply = thread.replies %]
-<article>[% reply.message %]</article>
+<section class="reply">
+	<header class="author">
+		[% l('by_author') %] [% reply.author.name %]
+		[% l('at_date') %] [% reply.timestamp %]
+	</header>
+	<article>
+	[% reply.message %]
+	</article>
+</section>
 [% END %]
 
-[% INCLUDE reply.template %]
-
+[% IF user.can_reply %][% INCLUDE reply.template %][% END %]

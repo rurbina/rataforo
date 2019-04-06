@@ -1,9 +1,13 @@
+<header>
 <h1>[% board.title %]</h1>
+</header>
 
+<section class="board_threads">
 <ul>
 [% FOREACH thread = board.threads %]
 <li><a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject %]</a></li>
 [% END %]
 </ul>
+</section>
 
-[% INCLUDE post.template %]
+[% IF user.can_post %][% INCLUDE post.template %][% END %]

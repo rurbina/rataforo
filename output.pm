@@ -1,5 +1,7 @@
 package output;
 
+use utf8;
+use common::sense;
 use Template;
 use File::Slurper qw(read_text);
 use Data::Dumper qw(Dumper);
@@ -20,7 +22,7 @@ sub template {
 	my $output = "";
 	my $path   = getcwd() . "/theme_default/";
 
-	my $tt = Template->new( INCLUDE_PATH => $path, );
+	my $tt = Template->new( INCLUDE_PATH => $path, ENCODING => 'utf8' );
 
 	my $fn = $arg{filename} // [ caller(1) ]->[3];
 	$fn =~ s/controller:://;
@@ -39,22 +41,23 @@ sub template {
 		use Data::Dumper qw(Dumper);
 		$Data::Dumper::Sortkeys = 1;
 
-		Dumper \@_;
+		'<pre>' . Dumper(\@_) . "</pre>\n";
 	};
 
 	$data->{page}->{title} = $arg{title} // $data->{env}->{title};
 
-	$tt->process( 'header.template', $data, \$output ) || return $s->text( "template error", $tt->error );
-	$tt->process( $fn, $data, \$output ) || return $s->text( "template error", $tt->error );
-	$tt->process( 'footer.template', $data, \$output ) || return $s->text( "template error", $tt->error );
+	$tt->process( 'header.template', $data, \$output );
+	$tt->process( 'trail.template', { items => $data->{trail} }, \$output ) if $data->{trail};
+	$tt->process( $fn, $data, \$output );
+	$tt->process( 'footer.template', $data, \$output );
 
 	return $output;
 
 }
 
 sub html {
-
-	my @out = ( '<!DOCTYPE html>', '<html>', @out, '</html>' );
+	
+	my @out = ( '<!DOCTYPE html>', '<html>', @_, '</html>' );
 
 	return join "\n", @out;
 

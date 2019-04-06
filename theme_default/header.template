@@ -1,7 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="UTF-8">
 	<title>[% page.title %]</title>
+<style>
+* { margin: 0px; padding: 0px; }
+
+body {
+}
+
+body>header,body>section,body>footer,body>article {
+    display: block;
+    max-width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+header h1 { font-size: 14pt; font-weight: normal; }
+header article { font-size: 10pt; }
+
+section.index_board { margin: 14pt auto; }
+section.index_board h1 { font-size: 14pt; font-weight: normal; }
+section.index_board article { font-size: 10pt; }
+
+section.board_threads li { font-size: 12pt; list-style-type: none; margin: 14pt 0pt; }
+
+nav.trail { display: block; max-width: 95%; margin: 7pt auto; font-size: 9pt; }
+nav.trail a { display: inline-block; }
+nav.trail a:before { content: '»' }
+
+section.reply { font-size: 12pt; margin: 14pt auto; }
+section.reply header.author { font-size: 9pt; color: #888; }
+
+footer { font-size: 8pt; color: silver;}
+</style>
 </head>
 <body>
 

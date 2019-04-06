@@ -1,6 +1,7 @@
+<header>
 <h1>[% site.title %]</h1>
-
-<div>[% site.description %]</div>
+<article>[% site.description %]</article>
+</header>
 
 [% FOREACH board = boards %]
 <section class="index_board">
@@ -8,5 +9,3 @@
 	<article>[% board.description %]</article>
 </section>
 [% END %]
-
-[% dumper(env) %]

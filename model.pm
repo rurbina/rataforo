@@ -1,8 +1,9 @@
 package model;
 
-use utf8;
 use DBD::SQLite;
 use DBI;
+use Data::Dumper qw(Dumper);
+$Data::Dumper::Sortkeys = 1;
 
 sub new {
 
@@ -139,6 +140,8 @@ sub get_thread {
 
 	my $thread = $s->get_threads( thread_id => $arg{thread_id} )->[0];
 
+	$thread->{board} = $s->get_board( board_id => $thread->{board_id} );
+
 	if ( $arg{get_replies} ) {
 		$thread->{replies} = $s->get_replies( thread_id => $thread->{thread_id} );
 	}
@@ -161,7 +164,7 @@ sub get_replies {
 	}
 
 	my $sql = qq{
-	select thread_id,reply_id,author,message,timestamp
+	select thread_id,reply_id,author as author_id,message,timestamp
 	    from replies
 	    where 1=1
 	    $sql_thread_id
@@ -172,12 +175,60 @@ sub get_replies {
 	$sth->execute(@param);
 
 	while ( my $reply = $sth->fetchrow_hashref() ) {
+
+		$reply->{author} = $s->get_user( user_id => $reply->{author_id} );
+
 		push @{$replies}, $reply;
 	}
 
 	$sth->finish();
 
 	return $replies;
+
+}
+
+sub get_users {
+
+	my ($s, %arg) = @_;
+
+	my $users = [];
+
+	my @params;
+	my $sql_user_id;
+
+	if ( $arg{user_id} ) {
+		push @params, $arg{user_id};
+		$sql_user_id = qq{and user_id = ?};
+	}
+	
+	my $sql = qq{
+	select user_id, name, about, timestamp
+	    from users
+	    where 1=1
+	    $sql_user_id
+	    order by name asc
+	};
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute(@params);
+
+	while ( my $row = $sth->fetchrow_hashref() ) {
+		push @{$users}, $row;
+	}
+
+	$sth->finish();
+
+	return $users;
+
+}
+
+sub get_user {
+
+	my ( $s, %arg ) = @_;
+
+	my $user = $s->get_users( user_id => $arg{user_id} )->[0];
+
+	return $user;
 
 }
 
