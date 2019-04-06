@@ -8,7 +8,7 @@ $Data::Dumper::Sortkeys = 1;
 
 sub new {
 
-	my ( $class, $env, $req ) = @_;
+	my ( $class, $env, $req, $ses ) = @_;
 
 	my $self = {
 		out => output->new(),
@@ -18,12 +18,14 @@ sub new {
 			trail => undef,
 		},
 		r => $req,
+		s => $ses,
 	};
 
 	$self->{d}->{site} = $self->{m}->get_site();
 
 	$env->{title} = $self->{d}->{site}->{title};
 
+	$self->{m}->check_session($ses);
 	
 	bless $self;
 
@@ -108,6 +110,27 @@ sub thread {
 }
 
 sub login {
+
+	return;
+
+}
+
+sub do_login {
+
+	my ($s) = @_;
+	my $p = $s->{r}->parameters();
+
+	my $status = $s->{m}->login( user_id => $p->{user_id}, passwd => $p->{passwd} );
+
+	if ( $status eq 'ok' ) {
+		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('login_success') };
+	}
+	else {
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('login_error') };
+	}
+
+	$s->{d}->{template} = 'index';
+	$s->index();
 
 	return;
 

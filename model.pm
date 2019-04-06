@@ -1,5 +1,6 @@
 package model;
 
+use util;
 use DBD::SQLite;
 use DBI;
 use Data::Dumper qw(Dumper);
@@ -10,15 +11,69 @@ sub new {
 	my $s = { dbh => undef, };
 
 	$s->{dbh} = DBI->connect(
-		"dbi:SQLite:dbname=rataforo.db", "", "",
+		"dbi:SQLite:dbname=rataforo.db",
+		"", "",
 		{
-			RaiseError => 1,
-			PrintError => 0,
+			RaiseError     => 1,
+			PrintError     => 0,
 			sqlite_unicode => 1,
 		}
 	) or die $DBI::errstr;
 
 	bless $s;
+
+}
+
+sub insert {
+
+	my ( $s, $data, $table ) = @_;
+
+	my $p_data = $s->parametrize( $data, glue => ', ' );
+
+	my $sql    = qq{INSERT INTO $table ($p_data->{sql}) VALUES ()};
+	my @params = ( @{ $p_data->{params} } );
+	die Dumper($sql);
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute(@params);
+	$sth->finish();
+
+}
+
+sub update {
+
+	my ( $s, $index, $data, $table ) = @_;
+
+	my $p_data  = $s->parametrize( $data, glue => ', ' );
+	my $p_index = $s->parametrize($index);
+
+	my $sql    = qq{UPDATE $table SET $p_data->{sql} WHERE $p_index->{sql}};
+	my @params = ( @{ $p_data->{params} }, @{ $p_index->{params} } );
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute(@params);
+	$sth->finish();
+
+}
+
+sub parametrize {
+
+	my ( $s, $hash, %arg ) = @_;
+
+	my ( @params, @sql );
+
+	foreach my $key ( sort keys %{$hash} ) {
+		if ( $key =~ m/(date|time)/ && $hash->{$key} eq 'now' ) {
+			push @sql, qq{$key = datetime('now')};
+		}
+		else {
+			push @sql,    qq{$key = ?};
+			push @params, $hash->{$key};
+		}
+	}
+	my $glue = $arg{glue} // ' and ';
+
+	return { params => \@params, sql => join( $glue, @sql ) };
 
 }
 
@@ -47,7 +102,7 @@ sub get_site {
 
 sub get_boards {
 
-	my ($s, %arg) = @_;
+	my ( $s, %arg ) = @_;
 
 	my $boards = [];
 
@@ -58,7 +113,7 @@ sub get_boards {
 		push @params, $arg{board_id};
 		$sql_board_id = qq{and board_id = ?};
 	}
-	
+
 	my $sql = qq{
 	select board_id, title, description
 	    from boards
@@ -189,7 +244,7 @@ sub get_replies {
 
 sub get_users {
 
-	my ($s, %arg) = @_;
+	my ( $s, %arg ) = @_;
 
 	my $users = [];
 
@@ -200,9 +255,9 @@ sub get_users {
 		push @params, $arg{user_id};
 		$sql_user_id = qq{and user_id = ?};
 	}
-	
+
 	my $sql = qq{
-	select user_id, name, about, timestamp
+	select user_id, name, about, timestamp, passwd, salt
 	    from users
 	    where 1=1
 	    $sql_user_id
@@ -229,6 +284,49 @@ sub get_user {
 	my $user = $s->get_users( user_id => $arg{user_id} )->[0];
 
 	return $user;
+
+}
+
+sub login {
+
+	my ( $s, %arg ) = @_;
+
+	my $user = $s->get_user( user_id => $arg{user_id} );
+
+	return 'user_not_found' unless $user;
+
+	my $test = util->test_password( $arg{passwd}, $user->{passwd} );
+
+	return 'bad_password' unless $test;
+
+	$s->update( { user_id => $arg{user_id} }, { last_login_time => 'now' }, 'users' );
+
+	return 'ok';
+
+}
+
+sub check_session {
+
+	my ( $s, $ses ) = @_;
+
+	return unless $$ses;
+
+	my $sql = qq{SELECT user_id FROM sessions WHERE session_id = ?};
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute($ses);
+
+	my ($user_id) = $sth->fetchrow_array();
+
+	$sth->finish();
+
+	if ($user_id) {
+		$ses = $s->get_user($user_id);
+		$ses->{session_id} = $ses;
+		return 1;
+	}
+
+	return;
 
 }
 

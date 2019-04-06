@@ -5,7 +5,7 @@
 		<dt>[% l('username') %]</dt>
 			<dd><input name="user_id"></dd>
 		<dt>[% l('password') %]</dt>
-			<dd><input name="passwd"></dd>
+			<dd><input name="passwd" type="password"></dd>
 		<dt><input type="submit" value="[% l('do_login') %]">
 	</dl>
 	</form>

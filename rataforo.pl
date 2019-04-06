@@ -52,22 +52,26 @@ sub dispatch {
 	my ( undef, $method, @params ) = split '/', $env->{PATH_INFO};
 
 	my $req = Plack::Request->new($env);
+	my $session;
 
-	my $c = controller->new( $env, $req );
+	my $c = controller->new( $env, $req, \$session );
 	my $m = $c->can($method);
 
 	if ( exists &{"controller::$method"} ) {
 
 		$data = $c->$method(@params);
+		my $file = $c->{d}->{template} // $method;
 
 		if ( !defined($data) ) {
 			my $out = output->new();
-			$data = $out->template( filename => $method, data => $c->{d} );
+			$data = $out->template( filename => $file, data => $c->{d} );
 		}
 		if ( ref($data) eq 'HASH' ) {
 			my $out = output->new();
-			$data = $out->template( filename => $method, data => $data );
+			$data = $out->template( filename => $file, data => $data );
 		}
+
+		&touch_session(\$session);
 	}
 	else {
 		$data = &error404( { method => $method, params => \@params } );
@@ -109,3 +113,14 @@ sub error500 {
 	return "<html><body><h1>500 Internal Server Error</h1><pre>$dump</pre></body></html>\n";
 
 }
+
+sub touch_session {
+
+	my $session = shift;
+	
+	if ( $session && $$session ) {
+		die 'omgdotouch';
+	}
+	
+}
+

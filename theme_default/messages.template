@@ -1,0 +1,7 @@
+[% IF messages ~%]
+<div class="messages">
+	[%~ FOREACH m = messages %]
+	<div class="message_[% m.type %]">[% m.message %]</div>
+	[%~ END %]
+</div>
+[%~ END ~%]

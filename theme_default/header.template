@@ -9,7 +9,7 @@
 body {
 }
 
-body>header,body>section,body>footer,body>article {
+body>header,body>section,body>footer,body>article,.messages {
     display: block;
     max-width: 95%;
     margin-left: auto;
@@ -18,6 +18,10 @@ body>header,body>section,body>footer,body>article {
 
 header h1 { font-size: 14pt; font-weight: normal; }
 header article { font-size: 10pt; }
+
+.messages>div { padding: 3pt; margin: 4pt auto; font-size: 10pt; }
+.messages>.message_success { background-color: #6a6; color: #262; }
+.messages>.message_fail { background-color: #c22; color: #600; }
 
 section.index_board { margin: 14pt auto; }
 section.index_board h1 { font-size: 14pt; font-weight: normal; }
@@ -37,3 +41,4 @@ footer { font-size: 8pt; color: silver;}
 </head>
 <body>
 
+[% INCLUDE messages.template %]

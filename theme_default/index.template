@@ -9,3 +9,5 @@
 	<article>[% board.description %]</article>
 </section>
 [% END %]
+
+[% INCLUDE login.template %]
