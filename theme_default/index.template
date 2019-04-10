@@ -7,7 +7,18 @@
 <section class="index_board">
 	<h1><a href="/board/[% board.board_id %]">[% board.title %]</a></h1>
 	<article>[% board.description %]</article>
+	[% IF board.last_thread %]
+	<aside>
+		[% l('last_thread') %]:
+		<a href="/thread/[% board.board_id %]/[% board.last_thread.thread_id %]">[% board.last_thread.subject | xml %]</a>
+		[% l('by_author') %] [% board.last_thread.author.name | xml %]
+		[% l('at_date') %] [% board.last_thread.timestamp %]
+	</aside>
+	[% END %]
+	[% IF board.last_reply %]
+	<aside>[% l('last_reply') %]: [% board.last_reply.author.name | xml %] @ [% board.last_reply.timestamp %]</aside>
+	[% END %]
 </section>
 [% END %]
 
-[% INCLUDE login.template %]
+[% UNLESS session.user %][% INCLUDE login.template %][% END %]

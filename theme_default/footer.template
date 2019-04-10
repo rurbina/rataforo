@@ -1,4 +1,4 @@
-
+[% IF session.user.name %]<footer><p>Logged in as [% session.user.name %]</p></footer>[% END %]
 <footer><p>Powered by Rataforo</p></footer>
 
 </body>

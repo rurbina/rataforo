@@ -1,6 +1,6 @@
 <nav class="trail">
 [% FOREACH i = items %]
-	<a href="[% i.href %]">[% i.title %]</a>
+	<a href="[% i.href | xml %]">[% i.title | xml %]</a>
 [% END %]
 </nav>
 

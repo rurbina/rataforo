@@ -48,7 +48,7 @@ sub template {
 
 	$tt->process( 'header.template', $data, \$output );
 	$tt->process( 'trail.template', { items => $data->{trail} }, \$output ) if $data->{trail};
-	$tt->process( $fn, $data, \$output );
+	$tt->process( $fn, $data, \$output ) || die $tt->error(), "\n";
 	$tt->process( 'footer.template', $data, \$output );
 
 	return $output;

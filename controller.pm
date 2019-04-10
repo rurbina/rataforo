@@ -14,11 +14,13 @@ sub new {
 		out => output->new(),
 		m   => model->new(),
 		d   => {
-			env => $env,
-			trail => undef,
+			env     => $env,
+			trail   => undef,
+			session => $ses,
 		},
-		r => $req,
-		s => $ses,
+		r       => $req,
+		s       => $ses,
+		session => $ses,
 	};
 
 	$self->{d}->{site} = $self->{m}->get_site();
@@ -26,7 +28,7 @@ sub new {
 	$env->{title} = $self->{d}->{site}->{title};
 
 	$self->{m}->check_session($ses);
-	
+
 	bless $self;
 
 }
@@ -69,7 +71,7 @@ sub index {
 
 	my ($s) = @_;
 
-	$s->{d}->{boards} = $s->{m}->get_boards();
+	$s->{d}->{boards} = $s->{m}->get_boards( get_last_reply => 1 );
 
 	$s->set_title( $s->l('board_index') );
 
@@ -100,10 +102,7 @@ sub thread {
 
 	$s->{d}->{board} = $s->{m}->get_board( board_id => $s->{d}->{thread}->{board_id} );
 
-	$s->push_trail(
-		{ href => qq{/board/$board_id}, title => $s->{d}->{board}->{title} },
-		{ href => qq{/thread/$board_id/$thread_id}, title => $s->{d}->{thread}->{subject} },
-	);
+	$s->push_trail( { href => qq{/board/$board_id}, title => $s->{d}->{board}->{title} }, { href => qq{/thread/$board_id/$thread_id}, title => $s->{d}->{thread}->{subject} }, );
 
 	return;
 
@@ -119,8 +118,9 @@ sub do_login {
 
 	my ($s) = @_;
 	my $p = $s->{r}->parameters();
+	my $session_id;
 
-	my $status = $s->{m}->login( user_id => $p->{user_id}, passwd => $p->{passwd} );
+	my $status = $s->{m}->login( user_id => $p->{user_id}, passwd => $p->{passwd}, session_id => \$session_id );
 
 	if ( $status eq 'ok' ) {
 		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('login_success') };
@@ -128,6 +128,10 @@ sub do_login {
 	else {
 		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('login_error') };
 	}
+
+	$s->{s}->{session_id} = $session_id;
+
+	$s->{m}->check_session( $s->{s} );
 
 	$s->{d}->{template} = 'index';
 	$s->index();
@@ -142,7 +146,62 @@ sub new_thread {
 
 	my $p = $s->{r}->parameters();
 
-	return $s->dumper( $s->{r}->parameters() );
+	my $thread = {
+		board_id => $p->{board_id},
+		author   => $s->{s}->{user}->{user_id},
+		subject  => $p->{subject},
+		message  => undef,
+	};
+
+	utf8::decode( $thread->{subject} );
+
+	$thread->{message} = $s->{m}->htmlize( $p->{message} );
+
+	$s->{m}->insert( $thread, 'threads' );
+	my $new_thread = $s->{m}->get_last_thread( board_id => $p->{board_id} );
+
+	$s->{d}->{redirect} = qq{/thread/$p->{board_id}/$new_thread->{thread_id}};
+	$s->{d}->{template} = 'thread';
+	$s->thread( $p->{board_id}, $new_thread->{thread_id} );
+
+	return;
+
+}
+
+sub new_reply {
+
+	my ($s) = @_;
+
+	my $p = $s->{r}->parameters();
+
+	my $reply = {
+		thread_id => $p->{thread_id},
+		author    => $s->{s}->{user}->{user_id},
+		message   => undef,
+	};
+
+	my $msg = $p->{message};
+	$reply->{message} = $s->{m}->htmlize( $p->{message} );
+
+	#die Dumper [ $reply, $msg ] ;
+
+	$s->{m}->insert( $reply, 'replies' );
+
+	$s->{d}->{redirect} = qq{/thread/$p->{board_id}/$p->{thread_id}};
+	$s->{d}->{template} = 'thread';
+	$s->thread( $p->{board_id}, $p->{thread_id} );
+
+	return;
+
+}
+
+sub user {
+
+	my ( $s, $user_id ) = @_;
+
+	$s->{d}->{user} = $s->{m}->get_user($user_id);
+
+	return;
 
 }
 

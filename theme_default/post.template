@@ -1,8 +1,12 @@
 <section>
 	<h2>[% l('new_thread') %]</h2>
 	<form method="post" action="/new_thread">
-	<input name="subject">
-	<textarea name="message"></textarea>
-	<input type="submit" value="[% l('do_post') %]">
+	<input type="hidden" name="board_id" value="[% board.board_id %]">
+	<dl>
+		<dt>[% l('subject') %]</dt>
+		<dd><input name="subject"></dd>
+		<dt>[% l('message') %]</dt>
+		<dd><textarea name="message"></textarea></dd>
+		<dd><input type="submit" value="[% l('do_post') %]"></dd>
 	</form>
 </section>

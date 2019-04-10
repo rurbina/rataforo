@@ -1,18 +1,17 @@
 <section class="thread">
-	<h1>[% thread.subject %]</h1>
+	<h1>[% thread.subject | xml %]</h1>
+	[% INCLUDE author.template author = thread.author, timestamp = thread.timestamp %]
 	<article>[% thread.message %]</article>
+	<span class="num_replies">[% l('num_replies', thread.replies.size) %]</span>
 </section>
 
 [% FOREACH reply = thread.replies %]
 <section class="reply">
-	<header class="author">
-		[% l('by_author') %] [% reply.author.name %]
-		[% l('at_date') %] [% reply.timestamp %]
-	</header>
+	[% INCLUDE author.template author = reply.author, timestamp = reply.timestamp, num => loop.count %]
 	<article>
 	[% reply.message %]
 	</article>
 </section>
 [% END %]
 
-[% IF user.can_reply %][% INCLUDE reply.template %][% END %]
+[% IF session.can_reply %][% INCLUDE reply.template %][% END %]

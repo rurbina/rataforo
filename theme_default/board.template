@@ -2,12 +2,18 @@
 <h1>[% board.title %]</h1>
 </header>
 
-<section class="board_threads">
+<section class="threads">
 <ul>
 [% FOREACH thread = board.threads %]
-<li><a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject %]</a></li>
+<li>
+	<a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject | xml %]</a>
+	<header class="author">
+		[% l('by_author') %] [% thread.author.name | xml %]
+		[% l('at_date') %] [% thread.timestamp %]
+	</header>
+</li>
 [% END %]
 </ul>
 </section>
 
-[% IF user.can_post %][% INCLUDE post.template %][% END %]
+[% IF session.can_post %][% INCLUDE post.template %][% END %]

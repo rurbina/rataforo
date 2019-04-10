@@ -1,0 +1,7 @@
+<header class="author">
+	<img class="avatar" src="[% author.gravatar %]?d=monsterid">
+	[% IF num %]#[% num %][% END %]
+	[% l('by_author') %]
+	<a href="/user/[% author.user_id | xml %]">[% author.name | xml %]</a>
+	[% IF timestamp %][% l('at_date') %] [% timestamp %][% END %]
+</header>

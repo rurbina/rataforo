@@ -1,5 +1,11 @@
-<h2>[% s('new_reply') %]</h2>
-<form method="post" action="/new_reply">
-<textarea name="message"></textarea>
-<input type="submit" value="[% s('do_reply') %]">
-</form>
+<section>
+	<h2>[% l('new_reply') %]</h2>
+	<form method="post" action="/new_reply">
+	<input type="hidden" name="board_id" value="[% thread.board_id %]">
+	<input type="hidden" name="thread_id" value="[% thread.thread_id %]">
+	<dl>
+		<dt>[% l('message') %]</dt>
+		<dd><textarea name="message"></textarea></dd>
+		<dd><input type="submit" value="[% l('do_reply') %]"></dd>
+	</form>
+</section>
