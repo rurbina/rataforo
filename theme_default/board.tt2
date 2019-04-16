@@ -16,4 +16,4 @@
 </ul>
 </section>
 
-[% IF session.can_post %][% INCLUDE post.template %][% END %]
+[% IF session.can_post %][% INCLUDE post.tt2 %][% END %]

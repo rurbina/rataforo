@@ -26,7 +26,7 @@ sub template {
 
 	my $fn = $arg{filename} // [ caller(1) ]->[3];
 	$fn =~ s/controller:://;
-	$fn = "$fn.template";
+	$fn = "$fn.tt2";
 
 	my $data = { %{ $arg{data} } };
 
@@ -46,10 +46,10 @@ sub template {
 
 	$data->{page}->{title} = $arg{title} // $data->{env}->{title};
 
-	$tt->process( 'header.template', $data, \$output );
-	$tt->process( 'trail.template', { items => $data->{trail} }, \$output ) if $data->{trail};
+	$tt->process( 'header.tt2', $data, \$output );
+	$tt->process( 'trail.tt2', { items => $data->{trail} }, \$output ) if $data->{trail};
 	$tt->process( $fn, $data, \$output ) || die $tt->error(), "\n";
-	$tt->process( 'footer.template', $data, \$output );
+	$tt->process( 'footer.tt2', $data, \$output );
 
 	return $output;
 

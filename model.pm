@@ -376,7 +376,7 @@ sub check_session {
 	$sth->finish();
 
 	if ($user_id) {
-		$ses->{user}      = $s->get_user($user_id);
+		$ses->{user}      = $s->get_user( user_id => $user_id );
 		$ses->{can_post}  = 1;
 		$ses->{can_reply} = 1;
 		return 1;

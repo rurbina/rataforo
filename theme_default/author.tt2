@@ -1,5 +1,8 @@
 <header class="author">
+	[% UNLESS no_avatar %]
 	<img class="avatar" src="[% author.gravatar %]?d=monsterid">
+	[% END %]
+	[% IF pre %][% pre %] — [% END %]
 	[% IF num %]#[% num %][% END %]
 	[% l('by_author') %]
 	<a href="/user/[% author.user_id | xml %]">[% author.name | xml %]</a>

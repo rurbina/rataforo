@@ -195,11 +195,25 @@ sub new_reply {
 
 }
 
+sub users {
+
+	my ( $s, $user_id ) = @_;
+
+	$s->{d}->{users} = $s->{m}->get_users();
+
+	$s->push_trail( { href => qq{/users}, title => $s->l('users') } );
+
+	return;
+
+}
+
 sub user {
 
 	my ( $s, $user_id ) = @_;
 
-	$s->{d}->{user} = $s->{m}->get_user($user_id);
+	$s->{d}->{user} = $s->{m}->get_user( user_id => $user_id );
+
+	$s->push_trail( { href => qq{/users}, title => $s->l('users') }, { href => qq{/user/$user_id}, title => $s->{d}->{user}->{name} }, );
 
 	return;
 

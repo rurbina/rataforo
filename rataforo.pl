@@ -116,7 +116,7 @@ sub save_session {
 	my ($sid) = @_;
 
 	my $c = CGI::Cookie->new(
-		-name    => 'sessionx_id',
+		-name    => 'session_id',
 		-value   => $sid,
 		-expires => '+1M',
 	);

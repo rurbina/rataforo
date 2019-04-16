@@ -18,6 +18,7 @@ body>header,body>section,body>footer,body>article,.messages {
 
 header h1 { font-size: 14pt; font-weight: normal; }
 header article { font-size: 10pt; }
+header.index article { padding-left: 0px; }
 
 .messages>div { padding: 3pt; margin: 4pt auto; font-size: 10pt; }
 .messages>.message_success { background-color: #6a6; color: #262; }
@@ -67,6 +68,20 @@ article blockquote {
 	border-left: 4px solid #ccc;
 }
 
+section.users li { list-style-type: none; margin: 4pt; }
+section.users img.avatar {
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+    max-width: 20px;
+}
+
+section.user img.avatar {
+    float: left;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+}
+section.user dl { display: block; margin-left: 90px; }
+section.user dt { font-weight: bold; }
+section.user dt:after { content: ': ' }
+section.user dd { margin-left: 80px; margin-bottom: 8px; }
 
 
 footer { font-size: 8pt; color: silver;}
@@ -74,4 +89,4 @@ footer { font-size: 8pt; color: silver;}
 </head>
 <body>
 
-[% INCLUDE messages.template %]
+[% INCLUDE messages.tt2 %]

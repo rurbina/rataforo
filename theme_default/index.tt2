@@ -1,6 +1,6 @@
-<header>
-<h1>[% site.title %]</h1>
-<article>[% site.description %]</article>
+<header class="index">
+	<h1>[% site.title %]</h1>
+	<article>[% site.description %]</article>
 </header>
 
 [% FOREACH board = boards %]
@@ -9,16 +9,23 @@
 	<article>[% board.description %]</article>
 	[% IF board.last_thread %]
 	<aside>
+		[% last_thread = BLOCK %]
 		[% l('last_thread') %]:
 		<a href="/thread/[% board.board_id %]/[% board.last_thread.thread_id %]">[% board.last_thread.subject | xml %]</a>
-		[% l('by_author') %] [% board.last_thread.author.name | xml %]
-		[% l('at_date') %] [% board.last_thread.timestamp %]
+		[% END %]
+		[% SET pre1 = last_thread %]
+		[% INCLUDE author.tt2
+			 author = board.last_thread.author
+			 timestamp => board.last_thread.timestamp
+			 no_avatar => 1
+			 pre = last_thread
+			 %]
 	</aside>
 	[% END %]
-	[% IF board.last_reply %]
+	[% IF board.last_reply && 0 %]
 	<aside>[% l('last_reply') %]: [% board.last_reply.author.name | xml %] @ [% board.last_reply.timestamp %]</aside>
 	[% END %]
 </section>
 [% END %]
 
-[% UNLESS session.user %][% INCLUDE login.template %][% END %]
+[% UNLESS session.user %][% INCLUDE login.tt2 %][% END %]

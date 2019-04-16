@@ -1,0 +1,17 @@
+[% SET userinfo = [
+	 [ 'username',     'user_id'   ]
+	 [ 'name',         'name'      ]
+	 [ 'about_user',   'about'     ]
+	 [ 'member_since', 'timestamp' ]
+	 ]
+%]
+<section class="user">
+	<h1>[% user.name %]</h1>
+	<img class="avatar" src="[% user.gravatar %]">
+	<dl class="user">
+		[% FOREACH ii = userinfo %]
+			<dt>[% l(ii.0) %]</dt>
+			<dd>[% user.${ii.1} %]</dd>
+		[% END %]
+	</dl>
+</section>

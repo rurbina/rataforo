@@ -1,0 +1,14 @@
+<section class="users">
+	<h1>[% l('users') %]</h1>
+	<ul>
+	[% FOREACH user = users %]
+		<li>
+			<a href="/user/[% user.user_id %]">
+				<img class="avatar" src="[% user.gravatar %]">
+				[% user.name %]
+			</a>
+			([% user.user_id %])
+		</li>
+	[% END %]
+	</ul>
+</section>

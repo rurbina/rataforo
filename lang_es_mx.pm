@@ -3,7 +3,7 @@ package lang_es_mx;
 use utf8;
 
 my %strings = (
-	about_user     => 'Brevei bio',
+	about_user     => 'Breve bio',
 	at_date        => 'el',
 	at_date        => 'en',
 	board_index    => 'Foros',
@@ -26,6 +26,7 @@ my %strings = (
 	subject        => 'Tema',
 	user_not_found => 'Contraseña incorrecta',
 	username       => 'Nombre de usuario',
+	users          => 'Usuarios',
 );
 
 sub l {
