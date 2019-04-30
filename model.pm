@@ -17,7 +17,7 @@ sub new {
 
 	my $s = {
 		dbh => undef,
-		l => undef,
+		l   => undef,
 	};
 
 	$s->{dbh} = DBI->connect(
@@ -38,8 +38,8 @@ sub l {
 
 	my $s = shift;
 
-	&{$s->{l}}(@_);
-	
+	&{ $s->{l} }(@_);
+
 }
 
 sub insert {
@@ -115,7 +115,7 @@ sub get_site {
 	$sth->finish();
 
 	$s->{site} = $site;
-	
+
 	return $site;
 
 }
@@ -353,10 +353,10 @@ sub login {
 
 	my ( $s, %arg ) = @_;
 
-	if ( ref($arg{direct_session}) eq 'HASH' && $s->check_session( $arg{direct_session} ) ) {
+	if ( ref( $arg{direct_session} ) eq 'HASH' && $s->check_session( $arg{direct_session} ) ) {
 		return 'ok';
 	}
-	
+
 	my $user = $s->get_user( user_id => $arg{user_id} );
 
 	return 'user_not_found' unless $user;
@@ -382,16 +382,19 @@ sub check_session {
 	my ( $s, $ses ) = @_;
 
 	# delete old registration requests -- do we need to?
-	$s->{dbh}->do(qq{
+	$s->{dbh}->do(
+		qq{
 		      DELETE FROM new_users
-		      WHERE ((strftime('%s', timestamp) - strftime('%s', 'now')) / 86400) > 7});
+		      WHERE ((strftime('%s', timestamp) - strftime('%s', 'now')) / 86400) > 7}
+	);
 
 	# delete old sessions
-	$s->{dbh}->do(qq{
+	$s->{dbh}->do(
+		qq{
 		      DELETE FROM sessions
-		      WHERE ((strftime('%s', last_touch_time) - strftime('%s', 'now')) / 86400) > 35});
-		      
-	
+		      WHERE ((strftime('%s', last_touch_time) - strftime('%s', 'now')) / 86400) > 35}
+	);
+
 	return unless ref($ses) eq 'HASH' && $ses->{session_id};
 
 	my $sql = qq{SELECT user_id FROM sessions WHERE session_id = ?};
@@ -453,7 +456,7 @@ sub check_email_exists {
 	my $sql = qq{SELECT 1 FROM users WHERE email = ? LIMIT 1};
 
 	my $sth = $s->{dbh}->prepare($sql);
-	$sth->execute( $email );
+	$sth->execute($email);
 
 	my ($exists) = $sth->fetchrow_array();
 
@@ -470,7 +473,7 @@ sub check_username_exists {
 	my $sql = qq{SELECT 1 FROM users WHERE user_id = ? LIMIT 1};
 
 	my $sth = $s->{dbh}->prepare($sql);
-	$sth->execute( $username );
+	$sth->execute($username);
 
 	my ($exists) = $sth->fetchrow_array();
 
@@ -483,7 +486,7 @@ sub check_username_exists {
 sub preregister {
 
 	my ( $s, %pp ) = @_;
-	
+
 	my $hash = md5_hex( localtime . $pp{user_id} . $pp{email} . \%pp );
 
 	my $url = $s->{site}->{site_url} . 'register_finish?hash=' . $hash;

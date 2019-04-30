@@ -234,14 +234,14 @@ sub user {
 
 }
 
-sub register {}
+sub register { }
 
 sub do_register {
 
 	my ( $s, $user_id ) = @_;
 
 	my $p = $s->{r}->parameters();
-	
+
 	$p->{email} =~ s/\s+$//;
 
 	my $error;
@@ -258,7 +258,7 @@ sub do_register {
 	}
 	else {
 		$s->{m}->preregister( user_id => $p->{username}, email => $p->{email} );
-		
+
 		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('confirmation_email_sent') };
 
 		$s->{d}->{template} = 'index';
@@ -277,7 +277,7 @@ sub register_finish {
 
 	if ( $s->{m}->check_new_hash( $p->{hash} ) ) {
 		$s->{d}->{valid_hash} = 1;
-		$s->{d}->{template} = 'chpw';
+		$s->{d}->{template}   = 'chpw';
 		$s->chpw();
 	}
 	else {
@@ -288,7 +288,7 @@ sub register_finish {
 
 }
 
-sub chpw {}
+sub chpw { }
 
 sub logout {
 
@@ -305,8 +305,8 @@ sub dump_settings {
 
 	my ( $s, $data ) = @_;
 
-	return $s->dumper({ s => $s, data => $data });
-	
+	return $s->dumper( { s => $s, data => $data } );
+
 }
 
 sub dumper {
