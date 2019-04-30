@@ -15,7 +15,10 @@ $Data::Dumper::Sortkeys = 1;
 
 sub new {
 
-	my $s = { dbh => undef, };
+	my $s = {
+		dbh => undef,
+		l => undef,
+	};
 
 	$s->{dbh} = DBI->connect(
 		"dbi:SQLite:dbname=rataforo.db",
@@ -29,6 +32,14 @@ sub new {
 
 	bless $s;
 
+}
+
+sub l {
+
+	my $s = shift;
+
+	&{$s->{l}}(@_);
+	
 }
 
 sub insert {
@@ -103,6 +114,8 @@ sub get_site {
 
 	$sth->finish();
 
+	$s->{site} = $site;
+	
 	return $site;
 
 }
@@ -340,13 +353,17 @@ sub login {
 
 	my ( $s, %arg ) = @_;
 
+	if ( ref($arg{direct_session}) eq 'HASH' && $s->check_session( $arg{direct_session} ) ) {
+		return 'ok';
+	}
+	
 	my $user = $s->get_user( user_id => $arg{user_id} );
 
 	return 'user_not_found' unless $user;
 
 	my $test = util->test_password( $arg{passwd}, $user->{passwd} );
 
-	return 'bad_password' unless $test;
+	return 'bad_password' unless $test or ( $arg{plain} && $arg{passwd} eq $user->{passwd} );
 
 	$s->update( { user_id => $arg{user_id} }, { last_login_time => 'now' }, 'users' );
 
@@ -364,6 +381,17 @@ sub check_session {
 
 	my ( $s, $ses ) = @_;
 
+	# delete old registration requests -- do we need to?
+	$s->{dbh}->do(qq{
+		      DELETE FROM new_users
+		      WHERE ((strftime('%s', timestamp) - strftime('%s', 'now')) / 86400) > 7});
+
+	# delete old sessions
+	$s->{dbh}->do(qq{
+		      DELETE FROM sessions
+		      WHERE ((strftime('%s', last_touch_time) - strftime('%s', 'now')) / 86400) > 35});
+		      
+	
 	return unless ref($ses) eq 'HASH' && $ses->{session_id};
 
 	my $sql = qq{SELECT user_id FROM sessions WHERE session_id = ?};
@@ -389,6 +417,25 @@ sub check_session {
 
 }
 
+sub delete_session {
+
+	my ( $s, $ses ) = @_;
+
+	my $sql = qq{DELETE FROM sessions WHERE session_id = ?};
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute( $ses->{session_id} );
+
+	my ($user_id) = $sth->fetchrow_array();
+
+	$sth->finish();
+
+	$ses = {};
+
+	return;
+
+}
+
 sub touch_session {
 
 	my ( $s, $ses ) = @_;
@@ -396,6 +443,112 @@ sub touch_session {
 	return unless ref($ses) eq 'HASH' && $ses->{session_id};
 
 	$s->update( { last_touch_time => 'now' }, { session_id => $ses->{session_id} }, 'sessions' );
+
+}
+
+sub check_email_exists {
+
+	my ( $s, $email ) = @_;
+
+	my $sql = qq{SELECT 1 FROM users WHERE email = ? LIMIT 1};
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute( $email );
+
+	my ($exists) = $sth->fetchrow_array();
+
+	$sth->finish();
+
+	return 1 if $exists;
+
+}
+
+sub check_username_exists {
+
+	my ( $s, $username ) = @_;
+
+	my $sql = qq{SELECT 1 FROM users WHERE user_id = ? LIMIT 1};
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute( $username );
+
+	my ($exists) = $sth->fetchrow_array();
+
+	$sth->finish();
+
+	return 1 if $exists;
+
+}
+
+sub preregister {
+
+	my ( $s, %pp ) = @_;
+	
+	my $hash = md5_hex( localtime . $pp{user_id} . $pp{email} . \%pp );
+
+	my $url = $s->{site}->{site_url} . 'register_finish?hash=' . $hash;
+
+	do {
+		use Email::Simple;
+		use Email::Sender::Simple qw(sendmail);
+
+		my $email = Email::Simple->create(
+			header => [
+				From    => $s->{site}->{email_from},
+				To      => $pp{email},
+				Subject => $s->l('register_email_subject') . ':' . $s->{site}->{name},
+			],
+			body => $s->l( 'register_email_body', $url ),
+		);
+
+		sendmail($email);
+	};
+
+	$s->insert(
+		{
+			user_id   => $pp{user_id},
+			email     => $pp{email},
+			hash      => $hash,
+			timestamp => 'now',
+		},
+		'new_users',
+	);
+
+}
+
+sub check_new_hash {
+
+	my ( $s, $hash ) = @_;
+
+	my $sql = qq{select user_id,email from new_users where hash = ?};
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute($hash);
+
+	my ( $user_id, $email ) = $sth->fetchrow_array();
+
+	$sth->finish();
+
+	if ($user_id) {
+		$s->insert(
+			{
+				user_id   => $user_id,
+				name      => $user_id,
+				email     => $email,
+				passwd    => $hash,
+				disabled  => 0,
+				confirmed => 1,
+			},
+			'users'
+		);
+
+		$s->delete( { user_id => $user_id }, 'new_users' );
+
+		$s->login( user_id => $user_id, passwd => $hash, plain => 1 );
+		return 1;
+	}
+
+	return;
 
 }
 

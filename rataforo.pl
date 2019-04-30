@@ -64,7 +64,6 @@ sub dispatch {
 	}
 
 	my $c = controller->new( $env, $req, $session );
-	my $m = $c->can($method);
 
 	if ( exists &{"controller::$method"} ) {
 

@@ -1,0 +1,15 @@
+<h1>[% l('change_password') %]</h1>
+<form action="/do_chpw" method="post">
+<dl>
+[% UNLESS valid_hash %]
+	<dt>[% l('old_password') %]</dt>
+	<dd><input type="password" name="oldpw"></dd>
+[% END %]
+	<dt>[% l('new_password') %]</dt>
+	<dd><input type="password" name="newpw"></dd>
+	<dt>[% l('retype_password') %]</dt>
+	<dd><input type="password" name="chkpw"></dd>
+	<dd><input type="submit" value="[% l('do_change_password') | xml %]"></dd>
+</dl>
+</form>
+

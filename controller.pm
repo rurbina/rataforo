@@ -29,6 +29,8 @@ sub new {
 
 	$self->{m}->check_session($ses);
 
+	$self->{m}->{l} = \&l;
+
 	bless $self;
 
 }
@@ -117,16 +119,29 @@ sub login {
 sub do_login {
 
 	my ($s) = @_;
+
 	my $p = $s->{r}->parameters();
+
 	my $session_id;
 
-	my $status = $s->{m}->login( user_id => $p->{user_id}, passwd => $p->{passwd}, session_id => \$session_id );
+	my $direct_session;
+
+	if ( $p->{session} ) {
+		$direct_session = { session_id => $p->{session} };
+	}
+
+	my $status = $s->{m}->login(
+		user_id        => $p->{user_id},
+		passwd         => $p->{passwd},
+		direct_session => $direct_session,
+		session_id     => \$session_id,
+	);
 
 	if ( $status eq 'ok' ) {
 		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('login_success') };
 	}
 	else {
-		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('login_error') };
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l( $status // 'login_error' ) };
 	}
 
 	$s->{s}->{session_id} = $session_id;
@@ -217,6 +232,81 @@ sub user {
 
 	return;
 
+}
+
+sub register {}
+
+sub do_register {
+
+	my ( $s, $user_id ) = @_;
+
+	my $p = $s->{r}->parameters();
+	
+	$p->{email} =~ s/\s+$//;
+
+	my $error;
+	if    ( $p->{email}    !~ m/^[\S_.-]+\@[\S.-]+$/ )   { $error = 'invalid_email_address'; }
+	elsif ( $p->{username} !~ m/^[a-z][a-z0-9]{3,32}$/ ) { $error = 'invalid_username'; }
+	elsif ( $s->{m}->check_email_exists( $p->{email} ) )       { $error = 'email_address_already_registered'; }
+	elsif ( $s->{m}->check_username_exists( $p->{username} ) ) { $error = 'username_already_registered'; }
+
+	if ($error) {
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l($error) };
+		$s->{d}->{template} = 'register';
+		$s->register();
+		return;
+	}
+	else {
+		$s->{m}->preregister( user_id => $p->{username}, email => $p->{email} );
+		
+		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('confirmation_email_sent') };
+
+		$s->{d}->{template} = 'index';
+		$s->index();
+	}
+
+	return;
+
+}
+
+sub register_finish {
+
+	my ( $s, $user_id ) = @_;
+
+	my $p = $s->{r}->parameters();
+
+	if ( $s->{m}->check_new_hash( $p->{hash} ) ) {
+		$s->{d}->{valid_hash} = 1;
+		$s->{d}->{template} = 'chpw';
+		$s->chpw();
+	}
+	else {
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('invalid_preregister_hash') };
+		$s->{d}->{template} = 'index';
+		$s->index();
+	}
+
+}
+
+sub chpw {}
+
+sub logout {
+
+	my ( $s, $data ) = @_;
+
+	$s->{m}->delete_session( $s->{s} );
+
+	$s->{d}->{template} = 'index';
+	$s->index();
+
+}
+
+sub dump_settings {
+
+	my ( $s, $data ) = @_;
+
+	return $s->dumper({ s => $s, data => $data });
+	
 }
 
 sub dumper {

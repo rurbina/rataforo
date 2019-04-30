@@ -1,0 +1,19 @@
+<h1>[% l('new_user_registry') %]</h1>
+<h2>[% l('site_rules') %]</h2>
+<section class="rules">
+<p>[% site.rules.split("\n").join("</p><p>") %]</p>
+</section>
+
+<form action="do_register" method="post">
+<dl>
+
+  <dt>[% l('username') %]</dt>
+  <dd><input name="username"></dd>
+
+  <dt>[% l('email') %]</dt>
+  <dd><input name="email"></dd>
+
+  <dd><input type="submit" value="[% l('agree_and_register') | xml %]"></dd>
+  
+</dl>
+</form>

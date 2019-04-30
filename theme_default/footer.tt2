@@ -1,4 +1,11 @@
-[% IF session.user.name %]<footer><p>Logged in as [% session.user.name %]</p></footer>[% END %]
+<footer>
+[% IF session.user.name %]
+	<p>Logged in as [% session.user.name %]</p>
+	<p><a href="/logout">[% l('logout') %]</a></p>
+[% ELSE %]
+	<p><a href="/register">[% l('register') %]</a></p>
+[% END %]
+</footer>
 <footer><p>Powered by Rataforo</p></footer>
 
 </body>
