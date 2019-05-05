@@ -148,10 +148,7 @@ sub do_login {
 
 	$s->{m}->check_session( $s->{s} );
 
-	$s->{d}->{template} = 'index';
-	$s->index();
-
-	return;
+	return { redirect => '/index' };
 
 }
 
@@ -173,13 +170,10 @@ sub new_thread {
 	$thread->{message} = $s->{m}->htmlize( $p->{message} );
 
 	$s->{m}->insert( $thread, 'threads' );
+
 	my $new_thread = $s->{m}->get_last_thread( board_id => $p->{board_id} );
 
-	$s->{d}->{redirect} = qq{/thread/$p->{board_id}/$new_thread->{thread_id}};
-	$s->{d}->{template} = 'thread';
-	$s->thread( $p->{board_id}, $new_thread->{thread_id} );
-
-	return;
+	return { redirect => qq{/thread/$p->{board_id}/$new_thread->{thread_id}} };
 
 }
 
@@ -195,18 +189,11 @@ sub new_reply {
 		message   => undef,
 	};
 
-	my $msg = $p->{message};
 	$reply->{message} = $s->{m}->htmlize( $p->{message} );
-
-	#die Dumper [ $reply, $msg ] ;
 
 	$s->{m}->insert( $reply, 'replies' );
 
-	$s->{d}->{redirect} = qq{/thread/$p->{board_id}/$p->{thread_id}};
-	$s->{d}->{template} = 'thread';
-	$s->thread( $p->{board_id}, $p->{thread_id} );
-
-	return;
+	return { redirect => qq{/thread/$p->{board_id}/$p->{thread_id}} };
 
 }
 
@@ -296,8 +283,7 @@ sub logout {
 
 	$s->{m}->delete_session( $s->{s} );
 
-	$s->{d}->{template} = 'index';
-	$s->index();
+	return { redirect => '/index' };
 
 }
 

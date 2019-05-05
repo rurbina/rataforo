@@ -315,7 +315,7 @@ sub get_users {
 	}
 
 	my $sql = qq{
-	select user_id, name, about, timestamp, passwd, disabled, confirmed
+	select user_id, name, email, gravatar_email, about, timestamp, passwd, disabled, confirmed
 	    from users
 	    where 1=1
 	    $sql_user_id
@@ -327,8 +327,8 @@ sub get_users {
 
 	while ( my $user = $sth->fetchrow_hashref() ) {
 
-		$user->{email_hash} = md5_hex( $user->{email} );
-		$user->{gravatar}   = "https://www.gravatar.com/avatar/$user->{email_hash}";
+		$user->{gravatar_hash} = md5_hex( $user->{gravatar_email} );
+		$user->{gravatar}      = "https://www.gravatar.com/avatar/$user->{gravatar_hash}";
 
 		push @{$users}, $user;
 	}

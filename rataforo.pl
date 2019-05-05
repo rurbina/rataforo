@@ -74,9 +74,16 @@ sub dispatch {
 			my $out = output->new();
 			$data = $out->template( filename => $file, data => $c->{d} );
 		}
-		if ( ref($data) eq 'HASH' ) {
-			my $out = output->new();
-			$data = $out->template( filename => $file, data => $data );
+		elsif ( ref($data) eq 'HASH' ) {
+			if ( $data->{redirect} ) {
+				$status  = 302;
+				$headers = [ Location => $data->{redirect} ];
+				$data    = "Location: $data->{redirect}";
+			}
+			else {
+				my $out = output->new();
+				$data = $out->template( filename => $file, data => $data );
+			}
 		}
 
 		if ( $c->{session}->{session_id} ) {
