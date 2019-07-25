@@ -2,7 +2,6 @@ package model;
 
 use utf8;
 use util;
-use Switch qw(Perl6);
 use DBD::SQLite;
 use DBI;
 use Data::GUID;
@@ -66,6 +65,21 @@ sub update {
 
 	my $sql    = qq{UPDATE $table SET $p_data->{sql} WHERE $p_index->{sql}};
 	my @params = ( @{ $p_data->{params} }, @{ $p_index->{params} } );
+
+	my $sth = $s->{dbh}->prepare($sql);
+	$sth->execute(@params);
+	$sth->finish();
+
+}
+
+sub delete {
+
+	my ( $s, $index, $table ) = @_;
+
+	my $p_index = $s->parametrize($index);
+
+	my $sql    = qq{DELETE FROM $table WHERE $p_index->{sql}};
+	my @params = @{ $p_index->{params} };
 
 	my $sth = $s->{dbh}->prepare($sql);
 	$sth->execute(@params);
@@ -377,6 +391,18 @@ sub login {
 
 }
 
+sub set_password {
+
+	my ( $s, %arg ) = @_;
+
+	my $hashed = util->encrypt_password( $arg{password} );
+
+	$s->update( { user_id => $arg{user_id} }, { passwd => $hashed }, 'users' );
+
+	return 1;
+
+}
+
 sub check_session {
 
 	my ( $s, $ses ) = @_;
@@ -489,22 +515,33 @@ sub preregister {
 
 	my $hash = md5_hex( localtime . $pp{user_id} . $pp{email} . \%pp );
 
-	my $url = $s->{site}->{site_url} . 'register_finish?hash=' . $hash;
+	my $url = $s->{site}->{site_url} . '/register_finish?hash=' . $hash;
 
 	do {
 		use Email::Simple;
 		use Email::Sender::Simple qw(sendmail);
 
+		my $body = qq{<!DOCTYPE html><html><body>\n} .
+		    util->htmlize_file( $s->{site}->{register_instructions} ) .
+		    qq{\n</body></html>\n};
+
+		$body =~ s/\$url/<a href="$url">$url<\/a>/;
+
+		$body =~ m/<h1>(.*?)<\/h1>/;
+		$subject = $1 // 'Registro en foro';
+
 		my $email = Email::Simple->create(
 			header => [
-				From    => $s->{site}->{email_from},
-				To      => $pp{email},
-				Subject => $s->l('register_email_subject') . ':' . $s->{site}->{name},
+				From           => qq{$s->{site}->{title} <$s->{site}->{email_from}>},
+				To             => qq{$pp{user_id} <$pp{email}>},
+				Subject        => qq{$s->{site}->{title}: $subject},
+				'Content-Type' => 'text/html; charset="ISO-8859-1"',
 			],
-			body => $s->l( 'register_email_body', $url ),
+			body => $body,
 		);
 
 		sendmail($email);
+
 	};
 
 	$s->insert(
@@ -545,38 +582,15 @@ sub check_new_hash {
 			'users'
 		);
 
-		$s->delete( { user_id => $user_id }, 'new_users' );
+		#$s->delete( { user_id => $user_id }, 'new_users' );
 
-		$s->login( user_id => $user_id, passwd => $hash, plain => 1 );
-		return 1;
+		my $session_id;
+		$s->login( user_id => $user_id, passwd => $hash, plain => 1, session_id => \$session_id );
+		
+		return $session_id;
 	}
 
 	return;
-
-}
-
-sub htmlize {
-
-	my ( $s, $message, %arg ) = @_;
-
-	my $html;
-	$arg{lang} //= 'cmark';
-
-	given $arg{lang}{
-		when 'raw' {
-			$html = $message;
-		}
-		when 'cmark' {
-			my ( $tmp, $tmpfn ) = tempfile();
-			write_text( $tmpfn, $message );
-			system("cmark --to html --smart $tmpfn > $tmpfn.html");
-			$html = read_text("$tmpfn.html");
-			utf8::decode($html);
-			unlink $tmpfn, "$tmpfn.html";
-		}
-	};
-
-	return $html;
 
 }
 

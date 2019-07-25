@@ -10,13 +10,19 @@ my %strings = (
 	bad_password                     => 'Contraseña incorrecta',
 	board_index                      => 'Foros',
 	by_author                        => 'Por',
+	change_password                  => 'Cambiar contraseña',
 	confirmation_email_sent          => 'Sigue las instrucciones en el correo de confirmación para terminar.',
+	do_change_password               => 'Actualizar',
 	do_login                         => 'Ingresar',
 	do_post                          => 'Postear',
 	do_reply                         => 'Responder',
 	email                            => 'Email',
 	email_address_already_registered => 'Dirección de email ya registrada previamente',
+	error_new_password_is_invalid    => 'La nueva contraseña es inválida, agrega más caracteres e intenta de nuevo',
+	error_not_logged_in              => 'Es necesario ingresar con nombre de usuario y contraseña para ver esta pantalla',
+	error_passwords_do_not_match     => 'La confirmación de contraseña no coincide, verifica e intenta de nuevo',
 	invalid_email_address            => 'Dirección de email inválida',
+	invalid_preregister_hash         => 'El hash de preregistro utilizado expiró o ya fue utilizado',
 	invalid_username                 => 'Nombre de usuario inválido',
 	last_reply                       => 'Última respuesta',
 	last_thread                      => 'Último tema',
@@ -27,14 +33,18 @@ my %strings = (
 	member_since                     => 'Miembro desde',
 	message                          => 'Mensaje',
 	name                             => 'Nombre',
+	new_password                     => 'Nueva contraseña',
 	new_reply                        => 'Responder',
 	new_thread                       => 'Nuevo tema',
 	new_user_registry                => 'Registro de nuevo usuario',
 	num_replies                      => '% respuestas',
+	old_password                     => 'Contraseña anterior',
 	password                         => 'Contraseña',
+	password_updated                 => 'Contraseña actualizada',
 	register                         => 'Registrarse',
-	register_email_body              => 'Accede a esta URL para finalizar tu registro:\n\n % \n\nGracias\n\n',
 	register_email_subject           => 'Registro en sitio',
+	retype_password                  => 'Confirmar contraseña',
+	set_your_password_to_finish      => 'Registro completado, crea una contraseña para terminar',
 	site_rules                       => 'Términos del sitio',
 	subject                          => 'Tema',
 	user_not_found                   => 'Contraseña incorrecta',
@@ -42,6 +52,14 @@ my %strings = (
 	username_already_registered      => 'Nombre de usuario ya registrado',
 	users                            => 'Usuarios',
 );
+
+sub lp {
+
+	my ( $key, @arg ) = @_;
+
+	return exists( $strings{$key} ) ? &l( $key, @arg ) : $key;
+
+}
 
 sub l {
 

@@ -3,6 +3,8 @@ package controller;
 use common::sense;
 use output;
 use model;
+use util;
+use Encode qw(decode);
 use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 
@@ -14,13 +16,15 @@ sub new {
 		out => output->new(),
 		m   => model->new(),
 		d   => {
-			env     => $env,
-			trail   => undef,
-			session => $ses,
+			env      => $env,
+			trail    => undef,
+			session  => $ses,
+			messages => [],
 		},
 		r       => $req,
 		s       => $ses,
 		session => $ses,
+		params  => {},
 	};
 
 	$self->{d}->{site} = $self->{m}->get_site();
@@ -30,6 +34,10 @@ sub new {
 	$self->{m}->check_session($ses);
 
 	$self->{m}->{l} = \&l;
+
+	foreach my $key ( $req->multi_param() ) {
+		$self->{params}->{ utf8::decode($key) } = utf8::decode($req->param($key));
+	}
 
 	bless $self;
 
@@ -41,6 +49,15 @@ sub l {
 	use lang_es_mx;
 
 	&lang_es_mx::l($key);
+
+}
+
+sub lp {
+
+	my ( $s, $key ) = @_;
+	use lang_es_mx;
+
+	&lang_es_mx::lp($key);
 
 }
 
@@ -120,7 +137,7 @@ sub do_login {
 
 	my ($s) = @_;
 
-	my $p = $s->{r}->parameters();
+	my $p = $s->{params};
 
 	my $session_id;
 
@@ -142,10 +159,11 @@ sub do_login {
 	}
 	else {
 		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l( $status // 'login_error' ) };
+		$s->{d}->{template} = 'index';
+		return $s->index();
 	}
 
 	$s->{s}->{session_id} = $session_id;
-
 	$s->{m}->check_session( $s->{s} );
 
 	return { redirect => '/index' };
@@ -155,8 +173,9 @@ sub do_login {
 sub new_thread {
 
 	my ($s) = @_;
+	$s->assert_session();
 
-	my $p = $s->{r}->parameters();
+	my $p = $s->{params};
 
 	my $thread = {
 		board_id => $p->{board_id},
@@ -165,9 +184,10 @@ sub new_thread {
 		message  => undef,
 	};
 
-	utf8::decode( $thread->{subject} );
+	$thread->{message} = util->htmlize( $p->{message} );
 
-	$thread->{message} = $s->{m}->htmlize( $p->{message} );
+	die 'message_must_not_be_empty' unless $p->{message};
+	die 'message_must_not_be_empty' unless $thread->{message};
 
 	$s->{m}->insert( $thread, 'threads' );
 
@@ -180,8 +200,9 @@ sub new_thread {
 sub new_reply {
 
 	my ($s) = @_;
+	$s->assert_session();
 
-	my $p = $s->{r}->parameters();
+	my $p = $s->{params};
 
 	my $reply = {
 		thread_id => $p->{thread_id},
@@ -189,7 +210,10 @@ sub new_reply {
 		message   => undef,
 	};
 
-	$reply->{message} = $s->{m}->htmlize( $p->{message} );
+	$reply->{message} = util->htmlize( $p->{message} );
+
+	die 'message_must_not_be_empty' unless $p->{message};
+	die 'message_must_not_be_empty' unless $reply->{message};
 
 	$s->{m}->insert( $reply, 'replies' );
 
@@ -221,13 +245,21 @@ sub user {
 
 }
 
-sub register { }
+sub register {
+
+	my ($s) = @_;
+
+	$s->{d}->{tos} = util->htmlize_file( $s->{d}->{site}->{tos} );
+
+	return;
+
+}
 
 sub do_register {
 
 	my ( $s, $user_id ) = @_;
 
-	my $p = $s->{r}->parameters();
+	my $p = $s->{params};
 
 	$p->{email} =~ s/\s+$//;
 
@@ -239,20 +271,17 @@ sub do_register {
 
 	if ($error) {
 		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l($error) };
-		$s->{d}->{template} = 'register';
-		$s->register();
-		return;
-	}
-	else {
-		$s->{m}->preregister( user_id => $p->{username}, email => $p->{email} );
-
-		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('confirmation_email_sent') };
-
 		$s->{d}->{template} = 'index';
-		$s->index();
+		return $s->index();
 	}
 
-	return;
+	$s->{m}->preregister( user_id => $p->{username}, email => $p->{email} );
+
+	push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('confirmation_email_sent') };
+
+	$s->{d}->{template} = 'index';
+	return $s->index();
+	return { redirect => qq{/index} };
 
 }
 
@@ -260,22 +289,77 @@ sub register_finish {
 
 	my ( $s, $user_id ) = @_;
 
-	my $p = $s->{r}->parameters();
+	my $p = $s->{params};
+	my $session_id = $s->{m}->check_new_hash( $p->{hash} );
 
-	if ( $s->{m}->check_new_hash( $p->{hash} ) ) {
-		$s->{d}->{valid_hash} = 1;
+	if ( $session_id ) {
+
+		$s->{s}->{session_id} = $session_id;
+		$s->{m}->check_session( $s->{s} );
+
+		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('set_your_password_to_finish') };
+		$s->{d}->{valid_hash} = $p->{hash};
+		#return { redirect => '/chpw' };
 		$s->{d}->{template}   = 'chpw';
-		$s->chpw();
+		return $s->chpw();
 	}
 	else {
 		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('invalid_preregister_hash') };
 		$s->{d}->{template} = 'index';
-		$s->index();
+		return $s->{index};
 	}
 
 }
 
-sub chpw { }
+sub chpw {
+
+	my ( $s ) = @_;
+
+	$s->assert_session();
+	
+	if ( ! $s->{session}->{user} ) {
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('error_not_logged_in') };
+		$s->{d}->{template} = 'index';
+		return $s->{index};
+	}
+
+	if ( $s->{session}->{user}->{passwd} =~ m/^[0-9a-f]{32}$/ ) {
+		$s->{d}->{valid_hash} = $s->{session}->{user}->{passwd};
+	}
+
+	return;
+	
+}
+
+sub do_chpw {
+
+	my ($s) = @_;
+
+	$s->assert_session();
+
+	my $old_ok;
+	my $new_ok;
+
+	$old_ok = 1 if $s->{session}->{user}->{passwd} eq $s->{params}->{hash};
+	$old_ok = 1 if util->test_password( $s->{params}->{oldpw}, $s->{session}->{user}->{passwd} );
+
+	$new_ok = 1 if length( $s->{params}->{newpw} ) >= 4 && $s->{params}->{newpw} eq $s->{params}->{chkpw};
+
+	if ( $old_ok && $new_ok && $s->{m}->set_password( user_id => $s->{session}->{user}->{user_id}, password => $s->{params}->{newpw} ) ) {
+		$s->success('password_updated');
+		$s->{d}->{template} = 'user';
+		return $s->user( $s->{session}->{user}->{user_id} );
+	}
+	elsif ( !$old_ok ) {
+		$s->error('error_passwords_do_not_match');
+	}
+	elsif ( !$new_ok ) {
+		$s->error('error_new_password_is_invalid');
+	}
+
+	$s->{d}->{template} = 'chpw';
+	return $s->chpw();
+}
 
 sub logout {
 
@@ -303,6 +387,32 @@ sub dumper {
 
 	$s->{out}->template( filename => 'dumper', title => 'Dumper', data => $s->{d} );
 
+}
+
+sub assert_session {
+
+	my ( $s ) = @_;
+	return util->assert_session($s->{session});
+	
+}
+
+sub error {
+	my ( $s, $msg ) = @_;
+	push @{ $s->{d}->{messages} }, { type => 'error', message => $s->lp($msg) };
+}
+
+sub success {
+	my ( $s, $msg ) = @_;
+	push @{ $s->{d}->{messages} }, { type => 'success', message => $s->lp($msg) };
+}
+
+sub session_required {
+
+	my ( $s ) = @_;
+	$s->error('error_not_logged_in');
+	$s->{d}->{template} = 'login';
+	return $s->login();
+	
 }
 
 1;

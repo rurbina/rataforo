@@ -1,5 +1,6 @@
 <h1>[% l('change_password') %]</h1>
 <form action="/do_chpw" method="post">
+[% IF valid_hash %]<input type="hidden" name="hash" value="[% valid_hash %]">[% END %]
 <dl>
 [% UNLESS valid_hash %]
 	<dt>[% l('old_password') %]</dt>

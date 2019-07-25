@@ -1,7 +1,7 @@
 <h1>[% l('new_user_registry') %]</h1>
 <h2>[% l('site_rules') %]</h2>
 <section class="rules">
-<p>[% site.rules.split("\n").join("</p><p>") %]</p>
+<p>[% tos %]</p>
 </section>
 
 <form action="do_register" method="post">

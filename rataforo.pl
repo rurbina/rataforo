@@ -1,16 +1,21 @@
 package rataforo;
 
+use v5.24;
 use utf8;
 use common::sense;
+use warnings qw(FATAL utf8);
 use Switch qw(Perl6);
+use charnames qw( :full :short );
 use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 use lib '.';
 use controller;
 use output;
-use Plack::Request;
+#use Plack::Request;
+use CGI::PSGI qw( -utf8 );
 use CGI::Cookie;
 use Encode;
+use Try::Tiny;
 
 my ( $status, $headers, $data );
 
@@ -35,7 +40,8 @@ my $app = sub {
 		}
 	}
 
-	unless ( grep { $_->[0] eq 'Content-Type' } @{$headers} ) {
+	my %headers_hash = @{$headers};
+	unless ( exists $headers_hash{'Content-Type'} ) {
 		&set_header( 'Content-Type' => 'text/html; charset=utf-8' );
 	}
 
@@ -55,7 +61,7 @@ sub dispatch {
 
 	my ( undef, $method, @params ) = split '/', $env->{PATH_INFO};
 
-	my $req     = Plack::Request->new($env);
+	my $req     = CGI::PSGI->new($env);
 	my $session = {};
 
 	my $cookies = CGI::Cookie->parse( $env->{HTTP_COOKIE} );
@@ -67,7 +73,12 @@ sub dispatch {
 
 	if ( exists &{"controller::$method"} ) {
 
-		$data = $c->$method(@params);
+		$data = try { $c->$method(@params); }
+		catch {
+			my ($e) = split / /;
+			exists( &{"controller::$e"} ) ? $c->$e(@params) : die $_;
+		};
+
 		my $file = $c->{d}->{template} // $method;
 
 		if ( !defined($data) ) {
