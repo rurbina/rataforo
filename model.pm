@@ -582,7 +582,7 @@ sub check_new_hash {
 			'users'
 		);
 
-		#$s->delete( { user_id => $user_id }, 'new_users' );
+		$s->delete( { user_id => $user_id }, 'new_users' );
 
 		my $session_id;
 		$s->login( user_id => $user_id, passwd => $hash, plain => 1, session_id => \$session_id );
