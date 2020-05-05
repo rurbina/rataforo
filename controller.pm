@@ -35,8 +35,13 @@ sub new {
 
 	$self->{m}->{l} = \&l;
 
-	foreach my $key ( $req->multi_param() ) {
-		$self->{params}->{ utf8::decode($key) } = utf8::decode($req->param($key));
+	my @param_keys = $req->multi_param();
+	foreach my $key (@param_keys) {
+		my $dkey = "$key";
+		my $dval = "" . $req->param($key);
+		utf8::decode($dkey);
+		utf8::decode($dval);
+		$self->{params}->{$dkey} = $dval;
 	}
 
 	bless $self;
