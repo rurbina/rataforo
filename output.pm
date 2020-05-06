@@ -20,7 +20,7 @@ sub template {
 	my ( $s, %arg ) = @_;
 
 	my $output = "";
-	my $path   = getcwd() . "/theme_default/";
+	my $path   = getcwd() . "/themes/default/";
 
 	my $tt = Template->new( INCLUDE_PATH => $path, ENCODING => 'utf8' );
 
