@@ -6,7 +6,7 @@
 		<dt>[% l('subject') %]</dt>
 		<dd><input name="subject"></dd>
 		<dt>[% l('message') %]</dt>
-		<dd><textarea name="message"></textarea></dd>
+		<dd><textarea name="message" rows="20"></textarea></dd>
 		<dd><input type="submit" value="[% l('do_post') %]"></dd>
 	</form>
 </section>
