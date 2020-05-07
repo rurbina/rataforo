@@ -3,6 +3,7 @@
 	<p>Logged in as [% session.user.name %]</p>
 	<p><a href="/logout">[% l('logout') %]</a></p>
 [% ELSE %]
+	<p><a href="/login">[% l('login') %]</a></p>
 	<p><a href="/register">[% l('register') %]</a></p>
 [% END %]
 </footer>

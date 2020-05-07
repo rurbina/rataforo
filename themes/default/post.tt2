@@ -1,4 +1,4 @@
-<section>
+<section class="new_thread">
 	<h2>[% l('new_thread') %]</h2>
 	<form method="post" action="/new_thread">
 	<input type="hidden" name="board_id" value="[% board.board_id %]">

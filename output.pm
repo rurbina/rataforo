@@ -20,7 +20,9 @@ sub template {
 	my ( $s, %arg ) = @_;
 
 	my $output = "";
-	my $path   = getcwd() . "/themes/default/";
+	my $path   = [ getcwd() . "/themes/default/" ];
+
+	unshift( @{$path}, getcwd() . "/themes/$arg{data}->{site}->{theme}" ) if $arg{data}->{site}->{theme};
 
 	my $tt = Template->new( INCLUDE_PATH => $path, ENCODING => 'utf8' );
 
@@ -41,7 +43,7 @@ sub template {
 		use Data::Dumper qw(Dumper);
 		$Data::Dumper::Sortkeys = 1;
 
-		'<pre>' . Dumper(\@_) . "</pre>\n";
+		'<pre>' . Dumper( \@_ ) . "</pre>\n";
 	};
 
 	$data->{page}->{title} = $arg{title} // $data->{env}->{title};
