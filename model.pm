@@ -329,7 +329,8 @@ sub get_users {
 	}
 
 	my $sql = qq{
-	select user_id, name, email, gravatar_email, about, timestamp, passwd, disabled, confirmed
+	select user_id, name, email, about, timestamp, passwd, disabled, confirmed,
+	    coalesce(nullif(gravatar_email,''),user_id) as gravatar_email
 	    from users
 	    where 1=1
 	    $sql_user_id
