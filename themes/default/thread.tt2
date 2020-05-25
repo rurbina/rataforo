@@ -6,6 +6,7 @@
 </section>
 
 [% FOREACH reply = thread.replies %]
+<a name="reply_[% reply.reply_id %]" />
 <section class="reply">
 	[% INCLUDE author.tt2 author = reply.author, timestamp = reply.timestamp, num => loop.count %]
 	<article>

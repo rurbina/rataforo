@@ -14,16 +14,19 @@
 		<a href="/thread/[% board.board_id %]/[% board.last_thread.thread_id %]">[% board.last_thread.subject | xml %]</a>
 		[% END %]
 		[% SET pre1 = last_thread %]
-		[% INCLUDE author.tt2
-			 author = board.last_thread.author
-			 timestamp => board.last_thread.timestamp
-			 no_avatar => 1
-			 pre = last_thread
-			 %]
+		[% INCLUDE author.tt2, author => board.last_thread.author, timestamp => board.last_thread.timestamp, no_avatar => 1, pre = last_thread %]
 	</aside>
 	[% END %]
-	[% IF board.last_reply && 0 %]
-	<aside>[% l('last_reply') %]: [% board.last_reply.author.name | xml %] @ [% board.last_reply.timestamp %]</aside>
+	[% IF board.last_reply %]
+	<aside>
+		[% last_reply = BLOCK %]
+		[% l('last_reply') %]: <a href="/thread/[% board.last_reply.thread.board_id %]/[% board.last_reply.thread.thread_id %]#reply_
+			[%~ board.last_reply.reply_id %]">
+			[%~ board.last_reply.thread.subject | xml %]</a>
+		[% END %]
+		[% SET pre2 = last_reply %]
+		[% INCLUDE author.tt2, author => board.last_reply.author, timestamp => board.last_reply.timestamp, no_avatar => 1, pre => last_reply %]
+	</aside>
 	[% END %]
 </section>
 [% END %]

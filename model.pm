@@ -164,6 +164,9 @@ sub get_boards {
 		if ( $arg{get_last_reply} ) {
 			$row->{last_thread} = $s->get_last_thread( board_id => $row->{board_id} );
 			$row->{last_reply} = $s->get_last_reply( thread_id => $row->{last_thread}->{thread_id} );
+			if ( $row->{last_reply} ) {
+				$row->{last_reply}->{thread} = $s->get_thread( thread_id => $row->{last_reply}->{thread_id} );
+			}
 		}
 
 		push @{$boards}, $row;
