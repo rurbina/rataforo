@@ -107,7 +107,7 @@ sub board {
 
 	my ( $s, $board_id ) = @_;
 
-	$s->{d}->{board} = $s->{m}->get_board( board_id => $board_id, get_threads => 1 )
+	$s->{d}->{board} = $s->{m}->get_board( board_id => $board_id, get_threads => 1, get_last_reply => 1 )
 	  or die 'board not found';
 
 	$s->set_title( $s->{d}->{board}->{title} );

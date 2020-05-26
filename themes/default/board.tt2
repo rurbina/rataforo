@@ -7,10 +7,21 @@
 [% FOREACH thread = board.threads %]
 <li>
 	<a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject | xml %]</a>
-	<header class="author">
-		[% l('by_author') %] [% thread.author.name | xml %]
-		[% l('at_date') %] [% thread.timestamp %]
-	</header>
+	<aside>
+	[% INCLUDE author.tt2 author => thread.author, timestamp => thread.timestamp, no_avatar => 1 %]
+	</aside>
+	[% IF thread.last_reply %]
+	[% pre = BLOCK %][% l('last_reply') %] [% l('by_author') | lower %][% END %]
+	<aside>
+		[% INCLUDE author.tt2
+			author => thread.last_reply.author,
+			timestamp => thread.last_reply.timestamp,
+			timestamp_url => "/thread/${thread.thread_id}#reply_${thread.last_reply.reply_id}",
+			no_avatar => 1,
+			pre => pre,
+			%]
+	</aside>
+	[% END %]
 </li>
 [% END %]
 </ul>

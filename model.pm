@@ -196,7 +196,10 @@ sub get_threads {
 		push @param, $arg{thread_id};
 	}
 
-	my $order_by = $arg{order_by} ? qq{order by $arg{order_by}} : qq{order by timestamp desc, thread_id asc};
+	my $order_by =
+	  $arg{order_by}
+	  ? qq{order by $arg{order_by}}
+	  : qq{order by coalesce((select max(timestamp) from replies where thread_id = threads.thread_id),timestamp) desc, thread_id asc};
 
 	my $limit = qq{limit $arg{limit}} if $arg{limit} > 0;
 
@@ -217,6 +220,10 @@ sub get_threads {
 
 		$thread->{author} = $s->get_user( user_id => $thread->{author_id} );
 
+		if ( $arg{get_last_reply} ) {
+			$thread->{last_reply} = $s->get_last_reply( thread_id => $thread->{thread_id} );
+		}
+
 		push @{$threads}, $thread;
 	}
 
@@ -233,7 +240,7 @@ sub get_board {
 	my $board = $s->get_boards( board_id => $arg{board_id} )->[0];
 
 	if ( $arg{get_threads} ) {
-		$board->{threads} = $s->get_threads( board_id => $board->{board_id} );
+		$board->{threads} = $s->get_threads( board_id => $board->{board_id}, get_last_reply => 1 );
 	}
 
 	return $board;
