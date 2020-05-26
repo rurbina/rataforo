@@ -8,17 +8,18 @@
 <li>
 	<a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject | xml %]</a>
 	<aside>
-	[% INCLUDE author.tt2 author => thread.author, timestamp => thread.timestamp, no_avatar => 1 %]
+	[% INCLUDE author.tt2 by => 1, author => thread.author, timestamp => thread.timestamp, no_avatar => 1 %]
 	</aside>
 	[% IF thread.last_reply %]
-	[% pre = BLOCK %][% l('last_reply') %] [% l('by_author') | lower %][% END %]
+	[% reply_pre = BLOCK %][% l('last_reply') %] [% l('by_author') | lower %][% END %]
+	[% reply_url = BLOCK %]/thread/[% thread.board_id %]/[% thread.last_reply.thread_id %]#reply_[% thread.last_reply.reply_id %][% END %]
 	<aside>
 		[% INCLUDE author.tt2
 			author => thread.last_reply.author,
 			timestamp => thread.last_reply.timestamp,
-			timestamp_url => "/thread/${thread.thread_id}#reply_${thread.last_reply.reply_id}",
+			timestamp_url => reply_url,
 			no_avatar => 1,
-			pre => pre,
+			pre => reply_pre,
 			%]
 	</aside>
 	[% END %]

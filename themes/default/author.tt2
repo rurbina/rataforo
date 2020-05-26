@@ -4,7 +4,7 @@
 	[% END %]
 	[% IF pre %][% pre %][% END %]
 	[% IF num %]#[% num %][% END %]
-	[% IF by %]l('by_author') %][% END %]
+	[% IF by %][% l('by_author') %][% END %]
 	<a href="/user/[% author.user_id | xml %]">[% author.name | xml %]</a>
 	[% IF timestamp %][% l('at_date') %]
 		[% IF timestamp_url %]<a href="[% timestamp_url | xml %]">[% timestamp %]</a>
