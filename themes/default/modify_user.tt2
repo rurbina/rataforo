@@ -1,0 +1,28 @@
+[% SET userinfo = [
+	 { label => 'username',       field => 'user_id',        type => 'readonly' },
+	 { label => 'member_since',   field => 'timestamp',      type => 'readonly' },
+	 { label => 'name',           field => 'name',           type => 'string' },
+	 { label => 'about_user',     field => 'about',          type => 'string' },
+	 { label => 'gravatar_email', field => 'gravatar_email', type => 'string' },
+	 ]
+%]
+<section class="user">
+<form method="post" action="/do_modify_user/[% user.user_id %]">
+	<h1>[% user.name %]</h1>
+	<img class="avatar" src="[% user.gravatar %]?d=monsterid">
+	<dl class="user">
+		[% FOREACH ii = userinfo %]
+			<dt><label for="[% ii.field %]">[% l(ii.label) %]</label></dt>
+			<dd>
+				[% SWITCH ii.type %]
+				[% CASE 'string' %]
+					<input name="[% ii.field %]" value="[% user.${ii.field} | xml %]">
+				[% CASE DEFAULT %]
+					[% user.${ii.field} %]
+				[% END %]
+			</dd>
+		[% END %]
+			<dd><input type="submit" value="[% l('modify_user') | xml %]"></dd>
+	</dl>
+</form>
+</section>

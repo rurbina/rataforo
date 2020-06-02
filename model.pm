@@ -43,12 +43,14 @@ sub l {
 
 sub insert {
 
-	my ( $s, $data, $table ) = @_;
+	my ( $s, $data, $table, %arg ) = @_;
 
 	my $p_data = $s->parametrize($data);
 	my $names  = join( ',', @{ $p_data->{names} } );
 	my $qmarks = join( ',', ('?') x scalar( @{ $p_data->{names} } ) );
 	my $sql    = qq{INSERT INTO $table ($names) VALUES ($qmarks)};
+
+	$sql =~ s/^INSERT/INSERT OR REPLACE/ if $arg{replace};
 
 	my $sth = $s->{dbh}->prepare($sql);
 	$sth->execute( @{ $p_data->{params} } );
@@ -66,7 +68,7 @@ sub update {
 	my $sql    = qq{UPDATE $table SET $p_data->{sql} WHERE $p_index->{sql}};
 	my @params = ( @{ $p_data->{params} }, @{ $p_index->{params} } );
 
-	my $sth = $s->{dbh}->prepare($sql);
+	my $sth = eval { $s->{dbh}->prepare($sql) } || die $sql;
 	$sth->execute(@params);
 	$sth->finish();
 
@@ -229,6 +231,39 @@ sub get_threads {
 
 	$sth->finish();
 
+	if ( @{$threads} && $arg{user_id} && $arg{get_new_replies} ) {
+
+		my %threads_by_id = map { $_->{thread_id} => $_ } @{$threads};
+
+		my $thread_ids = join( ',', map { qq{'$_->{thread_id}'} } @{$threads} );
+
+		my $sql = qq{
+		select 
+		    threads.thread_id,
+		    seen_threads.timestamp as last_seen,
+		    case when seen_threads.timestamp is null then 1 else null end as new_thread,
+		    count(case when replies.timestamp < seen_threads.timestamp then 1 end) as new_replies_count
+		    from threads
+		    left join seen_threads on seen_threads.thread_id = threads.thread_id and user_id = ?
+		    left join replies on replies.thread_id = threads.thread_id 
+			and (seen_threads.timestamp is null or replies.timestamp > seen_threads.timestamp)
+		    where threads.thread_id in ($thread_ids)
+		    group by threads.thread_id
+		};
+
+		my $sth = $s->{dbh}->prepare($sql);
+		$sth->execute( $arg{user_id} );
+
+		while ( my $seen = $sth->fetchrow_hashref() ) {
+			$threads_by_id{ $seen->{thread_id} }->{new_thread}        = $seen->{new_thread};
+			$threads_by_id{ $seen->{thread_id} }->{last_seen}         = $seen->{last_seen};
+			$threads_by_id{ $seen->{thread_id} }->{new_replies_count} = $seen->{new_replies_count};
+		}
+
+		$sth->finish();
+
+	}
+
 	return $threads;
 
 }
@@ -237,10 +272,15 @@ sub get_board {
 
 	my ( $s, %arg ) = @_;
 
-	my $board = $s->get_boards( board_id => $arg{board_id} )->[0];
+	my $board = $s->get_boards( board_id => $arg{board_id}, user_id => $arg{user_id} )->[0];
 
 	if ( $arg{get_threads} ) {
-		$board->{threads} = $s->get_threads( board_id => $board->{board_id}, get_last_reply => 1 );
+		$board->{threads} = $s->get_threads(
+			board_id        => $board->{board_id},
+			user_id         => $arg{user_id},
+			get_last_reply  => $arg{get_last_reply},
+			get_new_replies => $arg{get_new_replies}
+		);
 	}
 
 	return $board;
@@ -409,6 +449,19 @@ sub set_password {
 	my $hashed = util->encrypt_password( $arg{password} );
 
 	$s->update( { user_id => $arg{user_id} }, { passwd => $hashed }, 'users' );
+
+	return 1;
+
+}
+
+sub set_user {
+
+	my ( $s, %arg ) = @_;
+
+	my %updates = %arg;
+	delete( $updates{user_id} );
+
+	$s->update( { user_id => $arg{user_id} }, \%updates, 'users' );
 
 	return 1;
 
@@ -600,6 +653,23 @@ sub check_new_hash {
 		
 		return $session_id;
 	}
+
+	return;
+
+}
+
+sub touch_thread {
+
+	my ( $s, %arg ) = @_;
+
+	$s->insert(
+		{
+			user_id   => $arg{user_id},
+			thread_id => $arg{thread_id},
+		},
+		'seen_threads',
+		replace => 1
+	);
 
 	return;
 

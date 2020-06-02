@@ -5,11 +5,21 @@
 <section class="threads">
 <ul>
 [% FOREACH thread = board.threads %]
-<li>
+<li class="thread [% IF thread.new_thread %]new_thread[% END %] [% IF thread.new_replies_count %]new_replies[% END %]">
 	<a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject | xml %]</a>
+	[% IF thread.new_thread %]
+	<aside class="new_thread">
+	[% l('new_thread') %]
+	</aside>
+	[% END %]
 	<aside>
 	[% INCLUDE author.tt2 by => 1, author => thread.author, timestamp => thread.timestamp, no_avatar => 1 %]
 	</aside>
+	[% IF thread.new_replies_count %]
+	<aside class="new_replies">
+	[% l('new_replies') %]: [% thread.new_replies_count %]
+	</aside>
+	[% END %]
 	[% IF thread.last_reply %]
 	[% reply_pre = BLOCK %][% l('last_reply') %] [% l('by_author') | lower %][% END %]
 	[% reply_url = BLOCK %]/thread/[% thread.board_id %]/[% thread.last_reply.thread_id %]#reply_[% thread.last_reply.reply_id %][% END %]

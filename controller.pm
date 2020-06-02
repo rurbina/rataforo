@@ -107,8 +107,13 @@ sub board {
 
 	my ( $s, $board_id ) = @_;
 
-	$s->{d}->{board} = $s->{m}->get_board( board_id => $board_id, get_threads => 1, get_last_reply => 1 )
-	  or die 'board not found';
+	$s->{d}->{board} = $s->{m}->get_board(
+		board_id        => $board_id,
+		user_id         => $s->{session}->{user}->{user_id},
+		get_threads     => 1,
+		get_last_reply  => 1,
+		get_new_replies => 1,
+	) or die 'board not found';
 
 	$s->set_title( $s->{d}->{board}->{title} );
 	$s->push_trail( { href => qq{/board/$board_id}, title => $s->{d}->{board}->{title} } );
@@ -125,6 +130,10 @@ sub thread {
 	  or die 'thread not found';
 
 	$s->{d}->{board} = $s->{m}->get_board( board_id => $s->{d}->{thread}->{board_id} );
+
+	if ( $s->{session}->{user} ) {
+		$s->{m}->touch_thread( user_id => $s->{session}->{user}->{user_id}, thread_id => $thread_id );
+	}
 
 	$s->push_trail( { href => qq{/board/$board_id}, title => $s->{d}->{board}->{title} }, { href => qq{/thread/$board_id/$thread_id}, title => $s->{d}->{thread}->{subject} }, );
 
@@ -250,6 +259,60 @@ sub user {
 
 }
 
+sub modify_user {
+
+	my ( $s, $user_id ) = @_;
+
+	die 'cannot_modify_other_users_info' unless $user_id eq $s->{session}->{user}->{user_id};
+	
+	$s->{d}->{user} = $s->{m}->get_user( user_id => $user_id );
+
+	$s->push_trail(
+		{ href => qq{/users}, title => $s->l('users') },
+		{ href => qq{/user/$user_id}, title => $s->{d}->{user}->{name} },
+		{ href => qq{/modify_user/$user_id}, title => $s->l('modify_user') },
+	);
+
+	return;
+
+}
+
+sub do_modify_user {
+
+	my ( $s, $user_id ) = @_;
+
+	my %input = eval {
+		util->validate_input(
+			input  => $s->{params},
+			values => {
+				name           => [ 'required', [ 'minlength', 3 ], [ 'maxlength', 64 ] ],
+				gravatar_email => [             [ 'maxlength', 255 ] ],
+				about          => [             [ 'maxlength', 1023 ] ],
+			},
+		);
+	};
+	my $error = $@;
+
+	if ( $user_id ne $s->{session}->{user}->{user_id} ) {
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('cannot_modify_other_users_info') };
+	}
+	elsif ($error) {
+		my @error = split( ' ', $error, 2 );
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l( $error[0] ) };
+	}
+	else {
+		$s->{m}->set_user( user_id => $user_id, %input );
+
+		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('modify_user_success') };
+
+		return { redirect => qq{/user/$user_id} };
+	}
+
+	$s->{d}->{template} = 'modify_user';
+	return $s->modify_user($user_id);
+
+}
+
 sub register {
 
 	my ($s) = @_;
@@ -264,11 +327,28 @@ sub do_register {
 
 	my ( $s, $user_id ) = @_;
 
+	my %input = eval {
+		util->validate_input(
+			input  => $s->{params},
+			values => {
+				email    => [ 'email',    [ 'minlength', 10 ], [ 'maxlength', 64 ] ],
+				username => [ 'username', [ 'minlength', 3 ],  [ 'maxlength', 32 ] ],
+			}
+		);
+	};
+	my $validation_error = $@;
+
+	if ($validation_error) {
+		my @error = split( ' ', $validation_error, 2 );
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l( $error[0] ) };
+	}
+
+	die Dumper \%input, $validation_error;
+	my $error;
 	my $p = $s->{params};
 
 	$p->{email} =~ s/\s+$//;
 
-	my $error;
 	if    ( $p->{email}    !~ m/^[\S_.-]+\@[\S.-]+$/ )   { $error = 'invalid_email_address'; }
 	elsif ( $p->{username} !~ m/^[a-z][a-z0-9]{3,32}$/ ) { $error = 'invalid_username'; }
 	elsif ( $s->{m}->check_email_exists( $p->{email} ) )       { $error = 'email_address_already_registered'; }

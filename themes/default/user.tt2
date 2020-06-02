@@ -7,7 +7,7 @@
 %]
 <section class="user">
 	<h1>[% user.name %]</h1>
-	<img class="avatar" src="[% user.gravatar %]">
+	<img class="avatar" src="[% user.gravatar %]?d=monsterid">
 	<dl class="user">
 		[% FOREACH ii = userinfo %]
 			<dt>[% l(ii.0) %]</dt>
@@ -15,3 +15,9 @@
 		[% END %]
 	</dl>
 </section>
+
+[% IF session.user.user_id == user.user_id %]
+<section>
+	<a href="/modify_user/[% user.user_id %]">[% l('modify_user') %]</a>
+</section>
+[% END %]

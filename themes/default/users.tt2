@@ -4,7 +4,7 @@
 	[% FOREACH user = users %]
 		<li>
 			<a href="/user/[% user.user_id %]">
-				<img class="avatar" src="[% user.gravatar %]">
+				<img class="avatar" src="[% user.gravatar %]?d=monsterid">
 				[% user.name %]
 			</a>
 			([% user.user_id %])

@@ -21,6 +21,7 @@ my %strings = (
 	error_new_password_is_invalid    => 'La nueva contraseña es inválida, agrega más caracteres e intenta de nuevo',
 	error_not_logged_in              => 'Es necesario ingresar con nombre de usuario y contraseña para ver esta pantalla',
 	error_passwords_do_not_match     => 'La confirmación de contraseña no coincide, verifica e intenta de nuevo',
+	gravatar_email                   => 'Email Gravatar',
 	invalid_email_address            => 'Dirección de email inválida',
 	invalid_preregister_hash         => 'El hash de preregistro utilizado expiró o ya fue utilizado',
 	invalid_username                 => 'Nombre de usuario inválido',
@@ -32,8 +33,10 @@ my %strings = (
 	logout                           => 'Cerrar sesión',
 	member_since                     => 'Miembro desde',
 	message                          => 'Mensaje',
+	modify_user                      => 'Modificar usuario',
 	name                             => 'Nombre',
 	new_password                     => 'Nueva contraseña',
+	new_replies                      => 'Nuevas respuestas',
 	new_reply                        => 'Responder',
 	new_thread                       => 'Nuevo tema',
 	new_user_registry                => 'Registro de nuevo usuario',
@@ -51,6 +54,15 @@ my %strings = (
 	username                         => 'Nombre de usuario',
 	username_already_registered      => 'Nombre de usuario ya registrado',
 	users                            => 'Usuarios',
+
+	validation_failed_username_username        => 'El nombre de usuario debe tener 4 o más caracteres alfanuméricos sin espacios',
+	validation_failed_minlength_email          => 'El email debe tener 10 o más caracteres',
+	validation_failed_required_name            => 'El nombre es requerido',
+	validation_failed_minlength_name           => 'El nombre debe tener 3 o más caracteres',
+	validation_failed_maxlength_name           => 'El nombre no debe tener más de 64 caracteres',
+	validation_failed_maxlength_gravatar_email => 'El email Gravatar no puede tener más de 250 caracteres',
+	validation_failed_maxlength_about          => 'La breve bio no puede tener más de 1000 caracteres',
+
 );
 
 sub lp {
