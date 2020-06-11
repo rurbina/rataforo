@@ -68,13 +68,17 @@ article {
 }
 
 article p {
-	padding: 4px 0px;
+    padding: 4px 0px;
 }
 
 article blockquote {
-	background-color: #eee;
-	padding: 4px 8px;
-	border-left: 4px solid #ccc;
+    background-color: #eee;
+    padding: 4px 8px;
+    border-left: 4px solid #ccc;
+}
+
+article img {
+    max-width: 100%;
 }
 
 section.new_thread input[name='subject'] {
