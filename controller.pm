@@ -343,7 +343,6 @@ sub do_register {
 		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l( $error[0] ) };
 	}
 
-	die Dumper \%input, $validation_error;
 	my $error;
 	my $p = $s->{params};
 
