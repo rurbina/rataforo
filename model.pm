@@ -14,13 +14,17 @@ $Data::Dumper::Sortkeys = 1;
 
 sub new {
 
+	my %arg = @_;
+
+	$arg{db} //= 'rataforo.db';
+
 	my $s = {
 		dbh => undef,
 		l   => undef,
 	};
 
 	$s->{dbh} = DBI->connect(
-		"dbi:SQLite:dbname=rataforo.db",
+		"dbi:SQLite:dbname=$arg{db}",
 		"", "",
 		{
 			RaiseError     => 1,
@@ -186,7 +190,7 @@ sub get_threads {
 
 	my @param;
 	my $threads = [];
-	my ( $sql_board_id, $sql_thread_id );
+	my ( $sql_board_id, $sql_thread_id, $sql_author );
 
 	if ( $arg{board_id} ) {
 		$sql_board_id = qq{and threads.board_id = ?};
@@ -196,6 +200,11 @@ sub get_threads {
 	if ( $arg{thread_id} ) {
 		$sql_thread_id = qq{and threads.thread_id = ?};
 		push @param, $arg{thread_id};
+	}
+
+	if ( $arg{author} ) {
+		$sql_author = qq{and threads.author = ?};
+		push @param, $arg{author};
 	}
 
 	my $order_by =
@@ -211,6 +220,7 @@ sub get_threads {
 	    where 1=1
 	    $sql_board_id
 	    $sql_thread_id
+	    $sql_author
 	    $order_by
 	    $limit
 	};
