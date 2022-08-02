@@ -473,6 +473,16 @@ sub dumper {
 
 }
 
+sub ipcheck {
+
+	my ( $s, $data ) = @_;
+
+	my $text = $s->{d}->{env}->{HTTP_X_REAL_IP} // $s->{d}->{env}->{REMOTE_ADDR};
+
+	$s->{out}->text($text);
+
+}
+
 sub assert_session {
 
 	my ( $s ) = @_;
