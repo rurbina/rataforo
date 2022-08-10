@@ -48,10 +48,14 @@ sub template {
 
 	$data->{page}->{title} = $arg{title} // $data->{env}->{title};
 
-	$tt->process( 'header.tt2', $data, \$output );
-	$tt->process( 'trail.tt2', { items => $data->{trail} }, \$output ) if $data->{trail};
-	$tt->process( $fn, $data, \$output ) || die $tt->error(), "\n";
-	$tt->process( 'footer.tt2', $data, \$output );
+	my $contents;
+	
+	$tt->process( 'trail.tt2', { items => $data->{trail} }, \$contents ) if $data->{trail};
+	$tt->process( $fn, $data, \$contents ) || die $tt->error(), "\n";
+
+	$data->{contents} = $contents;
+	
+	$tt->process( '_theme.tt2', $data, \$output );
 
 	return $output;
 

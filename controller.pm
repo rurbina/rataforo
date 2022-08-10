@@ -5,6 +5,7 @@ use output;
 use model;
 use util;
 use Encode qw(decode);
+use Try::Tiny;
 use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 
@@ -59,10 +60,10 @@ sub l {
 
 sub lp {
 
-	my ( $s, $key ) = @_;
+	my ( $s, @params ) = @_;
 	use lang_es_mx;
 
-	&lang_es_mx::lp($key);
+	&lang_es_mx::lp(@params);
 
 }
 
@@ -95,9 +96,13 @@ sub index {
 
 	my ($s) = @_;
 
-	$s->{d}->{boards} = $s->{m}->get_boards( get_last_reply => 1 );
+	$s->{d}->{boards} = $s->{m}->get_boards( get_last_reply => 1, get_stats => 1 );
 
 	$s->set_title( $s->l('board_index') );
+
+	if ( $s->{params}->{logout} ) {
+		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('logged_out') };
+	}
 
 	return;
 
@@ -264,7 +269,7 @@ sub modify_user {
 	my ( $s, $user_id ) = @_;
 
 	die 'cannot_modify_other_users_info' unless $user_id eq $s->{session}->{user}->{user_id};
-	
+
 	$s->{d}->{user} = $s->{m}->get_user( user_id => $user_id );
 
 	$s->push_trail(
@@ -283,12 +288,12 @@ sub do_modify_user {
 
 	my %input = eval {
 		util->validate_input(
-			input  => $s->{params},
-			values => {
-				name           => [ 'required', [ 'minlength', 3 ], [ 'maxlength', 64 ] ],
-				gravatar_email => [             [ 'maxlength', 255 ] ],
-				about          => [             [ 'maxlength', 1023 ] ],
-			},
+			input => $s->{params},
+			check => [
+				[ name           => [ 'required', [ 'minlength', 3 ], [ 'maxlength', 64 ] ] ],
+				[ gravatar_email => [ [ 'maxlength', 255 ] ] ],
+				[ about          => [ [ 'maxlength', 1023 ] ] ],
+			],
 		);
 	};
 	my $error = $@;
@@ -317,7 +322,9 @@ sub register {
 
 	my ($s) = @_;
 
-	$s->{d}->{tos} = util->htmlize_file( $s->{d}->{site}->{tos} );
+	if ( $s->{d}->{site}->{tos} ) {
+		$s->{d}->{tos} = util->htmlize_file( $s->{d}->{site}->{tos} );
+	}
 
 	return;
 
@@ -327,45 +334,64 @@ sub do_register {
 
 	my ( $s, $user_id ) = @_;
 
-	my %input = eval {
-		util->validate_input(
-			input  => $s->{params},
-			values => {
-				email    => [ 'email',    [ 'minlength', 10 ], [ 'maxlength', 64 ] ],
-				username => [ 'username', [ 'minlength', 3 ],  [ 'maxlength', 32 ] ],
+	my @checks = (
+		[ email    => [ 'email',    [ 'minlength', 10 ], [ 'maxlength', 64 ] ] ],
+		[ username => [ 'username', [ 'minlength', 3 ],  [ 'maxlength', 32 ] ] ],
+	);
+
+	push( @checks, [ passwd => [ [ 'minlength', 4 ] ] ] ) unless $s->{d}->{site}->{require_email_confirmation};
+
+	try {
+		# standard validations
+		my %input = util->validate_input( input => $s->{params}, check => \@checks );
+
+		# special ones
+		my $p = $s->{params};
+
+		$p->{email} =~ s/\s+$//;
+
+		if    ( $p->{email} !~ m/^[\S_.-]+\@[\S.-]+$/ )            { die [ invalid_email_address => $p->{email} ]; }
+		elsif ( $p->{username} !~ m/^[a-z][a-z0-9]{3,32}$/ )       { die [ invalid_username => $p->{username} ]; }
+		elsif ( $s->{m}->check_email_exists( $p->{email} ) )       { die [ email_address_already_registered => $p->{email} ]; }
+		elsif ( $s->{m}->check_username_exists( $p->{username} ) ) { die 'username_already_registered'; }
+
+		# confirmation via email, messy
+		if ( $s->{d}->{site}->{require_email_confirmation} ) {
+
+			$s->{m}->preregister( user_id => $p->{username}, email => $p->{email} );
+
+			push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('confirmation_email_sent') };
+
+			$s->{d}->{template} = 'index';
+			return $s->index();
+			return { redirect => qq{/index} };
+
+		}
+
+		# direct registration, less hassle but more spam
+		else {
+			$s->{m}->add_user( username => $p->{username}, email => $p->{email}, password => $p->{passwd} );
+
+			my $session_id;
+			my $status = $s->{m}->login( user_id => $p->{username}, passwd => $p->{passwd}, session_id => \$session_id );
+			if ( $status ne 'ok' ) {
+				die 'register_failed';
 			}
-		);
+
+			$s->{s}->{session_id} = $session_id;
+			$s->{m}->check_session( $s->{s} );
+
+			push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('register_complete') };
+			$s->{d}->{template} = 'index';
+			return $s->index();
+		}
+	}
+	catch {
+		my $message = util->process_error($_);
+		push @{ $s->{d}->{messages} }, { type => 'error', message => $message };
+		$s->{d}->{template} = 'register';
+		return $s->register();
 	};
-	my $validation_error = $@;
-
-	if ($validation_error) {
-		my @error = split( ' ', $validation_error, 2 );
-		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l( $error[0] ) };
-	}
-
-	my $error;
-	my $p = $s->{params};
-
-	$p->{email} =~ s/\s+$//;
-
-	if    ( $p->{email}    !~ m/^[\S_.-]+\@[\S.-]+$/ )   { $error = 'invalid_email_address'; }
-	elsif ( $p->{username} !~ m/^[a-z][a-z0-9]{3,32}$/ ) { $error = 'invalid_username'; }
-	elsif ( $s->{m}->check_email_exists( $p->{email} ) )       { $error = 'email_address_already_registered'; }
-	elsif ( $s->{m}->check_username_exists( $p->{username} ) ) { $error = 'username_already_registered'; }
-
-	if ($error) {
-		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l($error) };
-		$s->{d}->{template} = 'index';
-		return $s->index();
-	}
-
-	$s->{m}->preregister( user_id => $p->{username}, email => $p->{email} );
-
-	push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('confirmation_email_sent') };
-
-	$s->{d}->{template} = 'index';
-	return $s->index();
-	return { redirect => qq{/index} };
 
 }
 
@@ -374,17 +400,18 @@ sub register_finish {
 	my ( $s, $user_id ) = @_;
 
 	my $p = $s->{params};
+
 	my $session_id = $s->{m}->check_new_hash( $p->{hash} );
 
-	if ( $session_id ) {
+	if ($session_id) {
 
 		$s->{s}->{session_id} = $session_id;
 		$s->{m}->check_session( $s->{s} );
 
 		push @{ $s->{d}->{messages} }, { type => 'success', message => $s->l('set_your_password_to_finish') };
 		$s->{d}->{valid_hash} = $p->{hash};
-		#return { redirect => '/chpw' };
-		$s->{d}->{template}   = 'chpw';
+
+		$s->{d}->{template} = 'chpw';
 		return $s->chpw();
 	}
 	else {
@@ -397,11 +424,11 @@ sub register_finish {
 
 sub chpw {
 
-	my ( $s ) = @_;
+	my ($s) = @_;
 
 	$s->assert_session();
-	
-	if ( ! $s->{session}->{user} ) {
+
+	if ( !$s->{session}->{user} ) {
 		push @{ $s->{d}->{messages} }, { type => 'error', message => $s->l('error_not_logged_in') };
 		$s->{d}->{template} = 'index';
 		return $s->{index};
@@ -412,7 +439,7 @@ sub chpw {
 	}
 
 	return;
-	
+
 }
 
 sub do_chpw {
@@ -451,7 +478,7 @@ sub logout {
 
 	$s->{m}->delete_session( $s->{s} );
 
-	return { redirect => '/index' };
+	return { redirect => '/index?logout=1' };
 
 }
 
@@ -485,9 +512,9 @@ sub ipcheck {
 
 sub assert_session {
 
-	my ( $s ) = @_;
-	return util->assert_session($s->{session});
-	
+	my ($s) = @_;
+	return util->assert_session( $s->{session} );
+
 }
 
 sub error {
@@ -502,11 +529,11 @@ sub success {
 
 sub session_required {
 
-	my ( $s ) = @_;
+	my ($s) = @_;
 	$s->error('error_not_logged_in');
 	$s->{d}->{template} = 'login';
 	return $s->login();
-	
+
 }
 
 1;

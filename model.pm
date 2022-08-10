@@ -167,18 +167,45 @@ sub get_boards {
 
 	while ( my $row = $sth->fetchrow_hashref() ) {
 
-		if ( $arg{get_last_reply} ) {
-			$row->{last_thread} = $s->get_last_thread( board_id => $row->{board_id} );
-			$row->{last_reply} = $s->get_last_reply( thread_id => $row->{last_thread}->{thread_id} );
-			if ( $row->{last_reply} ) {
-				$row->{last_reply}->{thread} = $s->get_thread( thread_id => $row->{last_reply}->{thread_id} );
-			}
-		}
-
 		push @{$boards}, $row;
 	}
 
 	$sth->finish();
+
+	if ( $arg{get_last_reply} ) {
+		foreach my $board ( @{$boards} ) {
+			$board->{last_thread} = $s->get_last_thread( board_id => $board->{board_id} );
+			$board->{last_reply} = $board->{last_thread} ? $s->get_last_reply( thread_id => $board->{last_thread}->{thread_id} ) : undef;
+			if ( $board->{last_reply} ) {
+				$board->{last_reply}->{thread} = $s->get_thread( thread_id => $board->{last_reply}->{thread_id} );
+			}
+		}
+	}
+
+	if ( $arg{get_stats} ) {
+
+		my %hashed_boards = map { $_->{board_id} => $_ } @{$boards};
+		
+		my $sql = qq{
+	   	    select
+	   		board_id,
+	   		(select count(*) from threads where board_id = boards.board_id) as thread_count,
+			(select count(*) from replies where thread_id in (select thread_id from threads where board_id = boards.board_id)) as reply_count
+	    	    from boards
+	    	    where 1=1
+	    	    $sql_board_id
+		};
+
+		my $sth = $s->{dbh}->prepare($sql);
+		$sth->execute(@params);
+
+		while ( my $row = $sth->fetchrow_hashref() ) {
+			$hashed_boards{$row->{board_id}}->{thread_count} = $row->{thread_count};
+			$hashed_boards{$row->{board_id}}->{reply_count} = $row->{reply_count};
+		}
+
+		$sth->finish();
+	}
 
 	return $boards;
 
@@ -475,6 +502,17 @@ sub set_user {
 
 	return 1;
 
+}
+
+sub add_user {
+
+	my ( $s, %arg ) = @_;
+
+	my $hashed = util->encrypt_password( $arg{password} );
+	$s->insert({ user_id => $arg{username}, name => $arg{username}, email => $arg{email}, passwd => $hashed }, 'users' ) || die 'insert_failed';
+
+	return 1;
+	
 }
 
 sub check_session {

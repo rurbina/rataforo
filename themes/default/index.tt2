@@ -1,12 +1,15 @@
-<header class="index">
-	<h1>[% site.title %]</h1>
-	<article>[% site.description %]</article>
-</header>
-
-[% FOREACH board = boards %]
-<section class="index_board">
-	<h1><a href="/board/[% board.board_id %]">[% board.title %]</a></h1>
-	<article>[% board.description %]</article>
+<dl class="boards">
+  <dt>[% site.title %]</dt>
+  [% FOREACH board = boards %]
+  <dd>
+    <div class="new_posts">NEW</div>
+    <div class="title">
+      <div><a href="/board/[% board.board_id %]">[% board.title %]</a></div>
+      <div>[% board.description %]</div>
+    </div>
+    <div class="stats">[% l('board_counts', board.thread_count, board.reply_count) %]</div>
+    <div class="last_post">
+      <div class="last_thread">
 	[% IF board.last_thread %]
 	<aside>
 		[% last_thread = BLOCK %]
@@ -17,8 +20,9 @@
 		[% INCLUDE author.tt2, author => board.last_thread.author, timestamp => board.last_thread.timestamp, no_avatar => 1, pre = last_thread %]
 	</aside>
 	[% END %]
+      </div>
+      <div class="last_reply">
 	[% IF board.last_reply %]
-	<aside>
 		[% last_reply = BLOCK %]
 		[% l('last_reply') %]: <a href="/thread/[% board.last_reply.thread.board_id %]/[% board.last_reply.thread.thread_id %]#reply_
 			[%~ board.last_reply.reply_id %]">
@@ -26,9 +30,12 @@
 		[% END %]
 		[% SET pre2 = last_reply %]
 		[% INCLUDE author.tt2, author => board.last_reply.author, timestamp => board.last_reply.timestamp, no_avatar => 1, pre => last_reply %]
-	</aside>
 	[% END %]
-</section>
-[% END %]
+      </div>
+    </div>
+  </dd>
+  [% END %]
+</dl>
 
-[% UNLESS session.user %][% INCLUDE login.tt2 %][% END %]
+
+

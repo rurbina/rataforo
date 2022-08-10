@@ -11,8 +11,6 @@ use CommonMark;
 use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 
-my $key = 'omgwtfbbq';
-
 sub new {
 
 	my $self = {};
@@ -84,6 +82,11 @@ sub sanitize_hash {
 	
 }
 
+# run a set of validations on given input
+# param hash:
+# input - hashref of name => value pairs
+# check - 
+
 sub validate_input {
 
 	my ( $s, %arg ) = @_;
@@ -99,25 +102,41 @@ sub validate_input {
 		username  => sub { $_[0] =~ m/^[a-z][a-z0-9_+-]{3,32}$/ ? 1 : undef },
 	);
 
-	foreach my $key ( keys %{ $arg{values} } ) {
+	foreach my $item ( @{ $arg{check} } ) {
 
-		my $value = $arg{input}->{$key};
+		my $field = $item->[0];
+		
+		my $value = $arg{input}->{$field};
 		$value =~ s/^\s+|\s+$//g;
 
-		foreach my $check ( @{ $arg{values}->{$key} } ) {
+		foreach my $check ( @{ $item->[1] } ) {
+
 			my $sub = ref($check) eq 'ARRAY' ? shift( @{$check} ) : $check;
 
 			if ( !$functions{$sub}( $value, ( ref($check) eq 'ARRAY' ) ? @{$check} : () ) ) {
-				die join( '_', 'validation_failed', $sub, $key ) . ' ' . Dumper $value;
+				die [ join( '_', 'validation_failed', $sub, $field ) , Dumper $value ];
 			}
 
-			$valid{$key} = $value;
+			$valid{$field} = $value;
 		}
 
 	}
 
 	return %valid;
 
+}
+
+sub process_error {
+
+	my ( $s, $error ) = @_;
+
+	use lang_es_mx;
+	if ( ref($error) eq 'ARRAY' ) {
+		return lang_es_mx::l(@{$error});
+	}
+	else {
+		return lang_es_mx::l( $error );
+	}
 }
 
 sub htmlize_file {
