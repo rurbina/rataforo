@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>[% page.title %]</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+* { margin: 0px; padding: 0px; box-sizing: border-box; }
+
+body {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+@media only screen and (max-width: 600px) {
+    input[type='text'], input[type='password'], input:not([type]), textarea, select
+    {
+	font-size: 16pt;
+    }
+}
+
+:root {
+    --color-fg1: #eee;
+    --color-bg1: #57f;
+    --color-fg2: #222;
+    --color-a2: #26e;
+    --color-bg2: #f4f4f4;
+    --color-bg2alt: #fafafa;
+    --color-fg3: #888;
+    --color-bg3: inherit;
+    --main-width: 90%;
+    --main-max-width: 900px;
+    --thin-border: 1px solid #e8e8e8;
+    --margin-vertical: 16px;
+}
+
+body>header,body>section,body>footer,.messages {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+main,footer,.messages {
+    width: var(--main-width);
+    max-width: var(--max-width);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body>header {
+    background-color: var(--color-bg1);
+    color: var(--color-bg2);
+    padding: 4px 16px;
+    margin-bottom: var(--margin-vertical);
+}
+
+body>footer {
+    margin-top: var(--margin-vertical);
+    font-size: 80%;
+    color: var(--color-fg3);
+    background-color: var(--color-bg3);
+}
+body>footer .signature {
+    display: block;
+    text-align: right;
+}
+body>footer .signature a {
+    color: var(--color-fg3);
+}
+
+a {
+    text-decoration: none;
+}
+
+main {
+}
+
+main h1, main h2, main h3, main h4, main h5, main h6 { color: var(--color-bg1); }
+
+form dl.center {
+    display: block;
+    text-align: center;
+}
+form dl.center dd  {
+    margin-bottom: var(--margin-vertical);
+}
+
+dl.boards {
+    margin: 0;
+    padding: 0;
+}
+
+dl.boards dt {
+    display: block;
+    color: var(--color-fg1);
+    background-color: var(--color-bg1);
+    font-size: 16pt;
+    padding: 4px;
+}
+
+dl.boards dd {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    color: var(--color-fg2);
+    background: var(--color-bg2);
+    border: var(--thin-border);
+}
+dl.boards dd a {
+    color: var(--color-a2);
+}
+dl.boards dd>* {
+    padding: 8px;
+}
+dl.boards dd:nth-child(even) {
+    background: var(--color-bg2alt);
+}
+dl.boards dd .new_posts { width: 5%;  }
+dl.boards dd .title     { width: 55%; }
+dl.boards dd .stats     { width: 10%; font-size: 80%; }
+dl.boards dd .last_post { width: 30%; }
+
+dl.boards dd .title { display: flex; flex-direction:column; }
+dl.boards dd .title :nth-child(1) { font-size: 110%; }
+dl.boards dd .title :nth-child(2) { font-size: 90%; }
+
+/* dl.boards dd * { outline: 1px dashed green } */
+
+.messages>div { padding: 4pt; margin-bottom: var(--margin-vertical); }
+.messages>.message_success { background-color: #6a6; color: #efe; }
+.messages>.message_error { background-color: #d33; color: #fee; }
+
+/*
+header h1 { font-size: 14pt; font-weight: normal; }
+header article { font-size: 10pt; }
+header.index article { padding-left: 0px; }
+
+
+section.index_board { margin: 14pt auto; }
+section.index_board h1 { font-size: 14pt; font-weight: normal; }
+section.index_board article { font-size: 12pt; padding-left: 0px; }
+section.index_board aside { font-size: 10pt; }
+
+section.threads li { font-size: 12pt; list-style-type: none; margin: 14pt 0pt; }
+
+nav.trail { display: block; max-width: 95%; margin: 7pt auto; font-size: 9pt; }
+nav.trail a { display: inline-block; }
+nav.trail a:before { content: ' » ' }
+
+section.reply { font-size: 12pt; margin: 14pt auto; }
+header.author { font-size: 9pt; color: #888; }
+header.author img.avatar {
+    float: left;
+    clear: left;
+    max-width: 30px;
+    margin-right: 8px;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+}
+section.thread, section.reply, section.new_reply {
+    padding: 4px;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+    max-width: 60em;
+}
+
+section.thread .num_replies {
+    font-size: 10pt;
+    color: #ccc;
+}
+
+article {
+    padding-left: 38px;
+}
+
+article p {
+    padding: 4px 0px;
+}
+
+article blockquote {
+    background-color: #eee;
+    padding: 4px 8px;
+    border-left: 4px solid #ccc;
+}
+
+article img {
+    max-width: 100%;
+}
+
+section.new_thread input[name='subject'] {
+    width: 100%;
+}
+
+section.new_thread textarea, section.new_reply textarea {
+    width: 100%;
+}
+
+section.users li { list-style-type: none; margin: 4pt; }
+section.users img.avatar {
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+    max-width: 20px;
+}
+
+section.user img.avatar {
+    float: left;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+}
+section.user dl { display: block; margin-left: 90px; }
+section.user dt { font-weight: bold; }
+section.user dt:after { content: ': ' }
+section.user dd { margin-left: 80px; margin-bottom: 8px; }
+
+
+
+*/
+
+</style>
+</head>
+<body>
+
+<header class="index">
+<h1>[% site.title %]</h1>
+<article>[% site.description %]</article>
+</header>
+
+[% INCLUDE messages.tt2 %]
+
+<main>
+[% contents %]
+</main>
+
+<footer>
+[% IF session.user.name %]
+	<p>[% l('logged_in_as', session.user.name) %]</p>
+	<p><a href="/logout">[% l('logout') %]</a></p>
+[% ELSE %]
+	<p><a href="/login">[% l('login') %]</a></p>
+	<p><a href="/register">[% l('register') %]</a></p>
+[% END %]
+
+<div class="signature"><a href="https://rataforo.com">Powered by Rataforo</a></div>
+</footer>
+
+</body>
+</html>
