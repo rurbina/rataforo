@@ -40,6 +40,8 @@ if ( $opt_u ) {
 		my $threads = $m->get_threads( author => $user->{user_id} );
 		foreach my $thread ( @$threads ) {
 			print "\t$thread->{subject}\n";
+			$m->delete( { thread_id => $thread->{thread_id} }, 'replies' );
+			$m->delete( { thread_id => $thread->{thread_id} }, 'threads' );
 		}
 		print "done\n";
 	}
