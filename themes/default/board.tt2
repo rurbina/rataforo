@@ -3,26 +3,30 @@
 </header>
 
 <section class="threads">
-<ul>
-[% FOREACH thread = board.threads %]
-<li class="thread [% IF thread.new_thread %]new_thread[% END %] [% IF thread.new_replies_count %]new_replies[% END %]">
-	<a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject | xml %]</a>
-	[% IF thread.new_thread %]
+<dl class="threads">
+<dt>[% l('threads') %]</td>
+[%- FOREACH thread = board.threads -%]
+<dd class="thread [% IF thread.new_thread %]new_thread[% END %] [% IF thread.new_replies_count %]new_replies[% END %]">
+	<p><a href="/thread/[% thread.board_id %]/[% thread.thread_id %]">[% thread.subject | xml %]</a></p>
+	[%- IF thread.new_thread %]
 	<aside class="new_thread">
-	[% l('new_thread') %]
+	[%- l('new_thread') -%]
 	</aside>
-	[% END %]
+	[%- END %]
 	<aside>
-	[% INCLUDE author.tt2 by => 1, author => thread.author, timestamp => thread.timestamp, no_avatar => 1 %]
+	[%- INCLUDE author.tt2 by => 1, author => thread.author, timestamp => thread.timestamp, no_avatar => 1 -%]
 	</aside>
-	[% IF thread.new_replies_count %]
+	<aside>
+	[%- l('replies') %]: [% thread.replies_count -%]
+	</aside>
+	[%- IF thread.new_replies_count %]
 	<aside class="new_replies">
-	[% l('new_replies') %]: [% thread.new_replies_count %]
+	[%- l('new_replies') %]: [% thread.new_replies_count -%]
 	</aside>
 	[% END %]
-	[% IF thread.last_reply %]
-	[% reply_pre = BLOCK %][% l('last_reply') %] [% l('by_author') | lower %][% END %]
-	[% reply_url = BLOCK %]/thread/[% thread.board_id %]/[% thread.last_reply.thread_id %]#reply_[% thread.last_reply.reply_id %][% END %]
+	[%- IF thread.last_reply %]
+	[%- reply_pre = BLOCK %][% l('last_reply') %] [% l('by_author') | lower %][% END -%]
+	[%- reply_url = BLOCK %]/thread/[% thread.board_id %]/[% thread.last_reply.thread_id %]#reply_[% thread.last_reply.reply_id %][% END -%]
 	<aside>
 		[% INCLUDE author.tt2
 			author => thread.last_reply.author,
@@ -32,10 +36,12 @@
 			pre => reply_pre,
 			%]
 	</aside>
-	[% END %]
-</li>
+	[%- END %]
+</dd>
 [% END %]
-</ul>
+</dl>
+[% INCLUDE pagination.tt2 page=params.page pages=board.page_count %]
 </section>
-
+<p>[% board.page_count %]</p>
+<p>[% board.thread_count %]</p>
 [% IF session.can_post %][% INCLUDE post.tt2 %][% END %]

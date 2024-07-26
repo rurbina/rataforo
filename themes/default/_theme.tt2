@@ -127,9 +127,45 @@ dl.boards dd .title :nth-child(2) { font-size: 90%; }
 
 /* dl.boards dd * { outline: 1px dashed green } */
 
+dl.threads dt {
+    display: block;
+    color: var(--color-fg1);
+    background-color: var(--color-bg1);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+dl.threads dd {
+    display: flex;
+    flex-flow: row wrap;
+    padding: 0.5rem;
+    color: var(--color-fg2);
+    background: var(--color-bg2);
+    border: var(--thin-border);
+}
+dl.threads dd:nth-child(even) {
+    background: var(--color-bg2alt);
+}
+dl.threads p:first-child {
+    flex-basis: 100%;
+}
+dl.threads aside { font-size: 0.8rem; margin-right: 1rem; }
+
 .messages>div { padding: 4pt; margin-bottom: var(--margin-vertical); }
 .messages>.message_success { background-color: #6a6; color: #efe; }
 .messages>.message_error { background-color: #d33; color: #fee; }
+
+nav.pagination { margin: 1rem 0rem; }
+nav.pagination>a {
+    display: inline-block;
+    padding: 0.25rem 1rem;
+    border: var(--thin-border);
+    border-color: var(--color-fg3);
+}
+nav.pagination>a:hover {
+    color: var(--color-fg1);
+    background-color: var(--color-bg1);
+    border-color: var(--color-a2);
+}
 
 /*
 header h1 { font-size: 14pt; font-weight: normal; }
@@ -208,8 +244,6 @@ section.user dl { display: block; margin-left: 90px; }
 section.user dt { font-weight: bold; }
 section.user dt:after { content: ': ' }
 section.user dd { margin-left: 80px; margin-bottom: 8px; }
-
-
 
 */
 

@@ -9,6 +9,7 @@ use Encode;
 use File::Temp qw(tempfile);
 use File::Slurper qw(write_text read_text);
 use Digest::MD5 qw(md5_hex);
+use POSIX qw(ceil);
 use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 
@@ -134,6 +135,8 @@ sub get_site {
 
 	$sth->finish();
 
+	$site->{threads_per_page} //= 25;
+
 	$s->{site} = $site;
 
 	return $site;
@@ -175,7 +178,7 @@ sub get_boards {
 	if ( $arg{get_last_reply} ) {
 		foreach my $board ( @{$boards} ) {
 			$board->{last_thread} = $s->get_last_thread( board_id => $board->{board_id} );
-			$board->{last_reply} = $board->{last_thread} ? $s->get_last_reply( thread_id => $board->{last_thread}->{thread_id} ) : undef;
+			$board->{last_reply}  = $board->{last_thread} ? $s->get_last_reply( thread_id => $board->{last_thread}->{thread_id} ) : undef;
 			if ( $board->{last_reply} ) {
 				$board->{last_reply}->{thread} = $s->get_thread( thread_id => $board->{last_reply}->{thread_id} );
 			}
@@ -185,12 +188,12 @@ sub get_boards {
 	if ( $arg{get_stats} ) {
 
 		my %hashed_boards = map { $_->{board_id} => $_ } @{$boards};
-		
+
 		my $sql = qq{
 	   	    select
 	   		board_id,
-	   		(select count(*) from threads where board_id = boards.board_id) as thread_count,
-			(select count(*) from replies where thread_id in (select thread_id from threads where board_id = boards.board_id)) as reply_count
+	   		(select count(*) from threads where threads.board_id = boards.board_id) as thread_count,
+			(select count(*) from replies where replies.thread_id in (select thread_id from threads where board_id = boards.board_id)) as reply_count
 	    	    from boards
 	    	    where 1=1
 	    	    $sql_board_id
@@ -200,8 +203,9 @@ sub get_boards {
 		$sth->execute(@params);
 
 		while ( my $row = $sth->fetchrow_hashref() ) {
-			$hashed_boards{$row->{board_id}}->{thread_count} = $row->{thread_count};
-			$hashed_boards{$row->{board_id}}->{reply_count} = $row->{reply_count};
+			$hashed_boards{ $row->{board_id} }->{thread_count} = $row->{thread_count};
+			$hashed_boards{ $row->{board_id} }->{reply_count}  = $row->{reply_count};
+			$hashed_boards{ $row->{board_id} }->{page_count}   = ceil( $row->{thread_count} / $s->{site}->{threads_per_page} );
 		}
 
 		$sth->finish();
@@ -239,10 +243,15 @@ sub get_threads {
 	  ? qq{order by $arg{order_by}}
 	  : qq{order by coalesce((select max(timestamp) from replies where thread_id = threads.thread_id),timestamp) desc, thread_id asc};
 
-	my $limit = qq{limit $arg{limit}} if $arg{limit} > 0;
+	my $tpp = $s->{site}->{threads_per_page};
+
+	my $page = $arg{page} ? $arg{page} - 1 : 0;
+	my $offset = qq{offset } . ( $page * $tpp );
+	my $limit = qq{limit } . ( $arg{limit} // $tpp );
 
 	my $sql = qq{
-	select thread_id, board_id, author as author_id, subject, message, timestamp
+	select thread_id, board_id, author as author_id, subject, message, timestamp,
+	       (select count(*) from replies where thread_id = threads.thread_id) as replies_count
 	    from threads
 	    where 1=1
 	    $sql_board_id
@@ -250,6 +259,7 @@ sub get_threads {
 	    $sql_author
 	    $order_by
 	    $limit
+	    $offset
 	};
 
 	my $sth = $s->{dbh}->prepare($sql);
@@ -309,14 +319,15 @@ sub get_board {
 
 	my ( $s, %arg ) = @_;
 
-	my $board = $s->get_boards( board_id => $arg{board_id}, user_id => $arg{user_id} )->[0];
+	my $board = $s->get_boards( board_id => $arg{board_id}, user_id => $arg{user_id}, get_stats => $arg{get_stats} )->[0];
 
 	if ( $arg{get_threads} ) {
 		$board->{threads} = $s->get_threads(
 			board_id        => $board->{board_id},
 			user_id         => $arg{user_id},
 			get_last_reply  => $arg{get_last_reply},
-			get_new_replies => $arg{get_new_replies}
+			get_new_replies => $arg{get_new_replies},
+			page            => $arg{threads_page},
 		);
 	}
 

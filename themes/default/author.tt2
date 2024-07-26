@@ -1,14 +1,14 @@
 <header class="author">
-	[% UNLESS no_avatar %]
+	[%- UNLESS no_avatar -%]
 	<img class="avatar" src="[% author.gravatar %]?d=monsterid">
-	[% END %]
-	[% IF pre %][% pre %][% END %]
-	[% IF num %]#[% num %][% END %]
-	[% IF by %][% l('by_author') %][% END %]
+	[%- END %]
+	[%- IF pre %][% pre %][% END -%]
+	[%- IF num %]#[% num %][% END -%]
+	[%- IF by %][% l('by_author') %][% END %]
 	<a href="/user/[% author.user_id | xml %]">[% author.name | xml %]</a>
-	[% IF timestamp %][% l('at_date') %]
-		[% IF timestamp_url %]<a href="[% timestamp_url | xml %]">[% timestamp %]</a>
-		[% ELSE %][% timestamp %]
-		[% END %]
-	[% END %]
+	[%- IF timestamp %] [% l('at_date') %]
+		[%- IF timestamp_url %] <a href="[% timestamp_url | xml %]">[% timestamp %]</a>
+		[%- ELSE %] [% timestamp %]
+		[%- END -%]
+	[%- END -%]
 </header>

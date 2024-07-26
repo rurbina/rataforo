@@ -45,6 +45,8 @@ sub new {
 		$self->{params}->{$dkey} = $dval;
 	}
 
+	$self->{d}->{params} = $self->{params};
+
 	bless $self;
 
 }
@@ -116,8 +118,10 @@ sub board {
 		board_id        => $board_id,
 		user_id         => $s->{session}->{user}->{user_id},
 		get_threads     => 1,
+		threads_page    => int( $s->{params}->{page} ),
 		get_last_reply  => 1,
 		get_new_replies => 1,
+		get_stats       => 1,
 	) or die 'board not found';
 
 	$s->set_title( $s->{d}->{board}->{title} );

@@ -1,0 +1,15 @@
+<nav class="pagination">
+	<a[% IF page > 1 %] href="?page=1"[% END %]>[% l('first_page') %]</a>
+	<a[% IF page > 1 %] href="?page=[% page - 1 %]"[% END %]>[% l('previous_page') %]</a>
+	[%- SET i = 1 %]
+	[%- WHILE i <= pages -%]
+	[%- IF i == page %]
+	<a>[% i %]</a>
+	[%- ELSE %]
+	<a href="?page=[% i %]">[% i %]</a>
+	[%- END %]
+	[%- SET i = i + 1 -%]
+	[%- END %]
+	<a[% IF page < pages %] href="?page=[% page + 1 %]"[% END %]>[% l('next_page') %]</a>
+	<a[% IF page != pages %] href="?page=[% pages %]"[% END %]>[% l('last_page') %]</a>
+</nav>
