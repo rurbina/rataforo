@@ -247,7 +247,7 @@ sub get_threads {
 
 	my $page = $arg{page} ? $arg{page} - 1 : 0;
 	my $offset = qq{offset } . ( $page * $tpp );
-	my $limit = qq{limit } . ( $arg{limit} // $tpp );
+	my $limit = qq{limit } . ( $arg{limit} // $tpp // 100 );
 
 	my $sql = qq{
 	select thread_id, board_id, author as author_id, subject, message, timestamp,
