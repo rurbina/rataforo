@@ -40,7 +40,7 @@
 </dd>
 [% END %]
 </dl>
-[% INCLUDE pagination.tt2 page=params.page pages=board.page_count %]
+[% INCLUDE pagination.tt2 page=(params.page||0) pages=(board.page_count||0) %]
 </section>
 <p>[% board.page_count %]</p>
 <p>[% board.thread_count %]</p>
