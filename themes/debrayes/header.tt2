@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>[% page.title %]</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,400;0,600;1,100;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0px; padding: 0px; box-sizing: border-box; }
+
+body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 10pt;
+    background-color: #333;
+    background-image: url(/themes/ratasoft/ratasoft-dark.png);
+}
+
+@media only screen and (max-width: 600px) {
+    input[type='text'], input[type='password'], input:not([type]), textarea, select
+    {
+	font-size: 16pt;
+    }
+}
+
+body>header,body>section,body>footer,body>article,.messages {
+    display: block;
+    max-width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+header h1 { font-size: 140%; font-weight: normal; color: #ccc; }
+header article { font-size: 100%; color: #ccc  }
+header.index article { padding-left: 0px; }
+
+.messages>div { padding: 3pt; margin: 4pt auto; }
+.messages>.message_success { background-color: #6a6; color: #262; }
+.messages>.message_fail { background-color: #c22; color: #600; }
+
+section {
+    background-color: #eee;
+}
+
+section.index_board { margin: 14pt auto; padding: 7pt; }
+section.index_board h1 { font-size: 140%; font-weight: normal; }
+section.index_board article { padding-left: 0px; }
+section.index_board aside { }
+
+section.threads li { font-size: 120%; list-style-type: none; margin: 4pt 7pt; }
+
+nav.trail {
+    display: inline-block;
+    max-width: 95%;
+    margin: 7pt;
+    padding: 3pt;
+    font-size: 90%;
+    background-color: rgba(1,1,1,0.5);
+}
+nav.trail a { display: inline-block; }
+nav.trail a:before { content: ' » ' }
+nav.trail a { color: #aaa; }
+nav.trail a:visited { color: #aaa; }
+nav.trail a:hover { color: white; }
+
+section.reply { font-size: 100%; margin: 14pt auto; }
+header.author { font-size: 90%; color: #888; }
+header.author img.avatar {
+    float: left;
+    clear: left;
+    max-width: 30px;
+    margin-right: 8px;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+}
+section.thread, section.reply, section.new_reply {
+    padding: 4px;
+    box-shadow: 5px 5px 5px rgba(0,0,0,0.5);
+    max-width: 60em;
+    border: 2px solid #aaa;
+}
+
+section.thread .num_replies {
+    font-size: 100%;
+    color: #888;
+}
+
+article {
+    padding-left: 38px;
+    padding-right: 19px;
+}
+
+article p {
+    padding: 4px 0px;
+}
+
+article blockquote {
+    background-color: #eee;
+    padding: 4px 8px;
+    border-left: 4px solid #ccc;
+}
+
+article img {
+    max-width: 95%;
+    border: 2px solid white;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+}
+
+section.new_thread {
+    margin-top: 14pt;
+    padding: 7pt;
+}
+
+section.new_thread input[name='subject'] {
+    width: 100%;
+}
+
+section.new_thread textarea, section.new_reply textarea {
+    width: 100%;
+}
+
+section.users li { list-style-type: none; margin: 4pt; }
+section.users img.avatar {
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+    max-width: 20px;
+}
+
+section.user img.avatar {
+    float: left;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+}
+section.user dl { display: block; margin-left: 90px; }
+section.user dt { font-weight: bold; }
+section.user dt:after { content: ': ' }
+section.user dd { margin-left: 80px; margin-bottom: 8px; }
+
+
+footer { font-size: 80%; color: silver;}
+footer a { color: #aaa; }
+footer a:visited { color: #aaa; }
+</style>
+</head>
+<body>
+
+[% INCLUDE messages.tt2 %]
