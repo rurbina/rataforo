@@ -55,7 +55,7 @@ sub template {
 
 	$data->{contents} = $contents;
 	
-	$tt->process( '_theme.tt2', $data, \$output );
+	$tt->process( '_theme.tt2', $data, \$output ) || die $tt->error();
 
 	return $output;
 
