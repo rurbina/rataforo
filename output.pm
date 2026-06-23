@@ -20,7 +20,7 @@ sub template {
 	my ( $s, %arg ) = @_;
 
 	my $output = "";
-	my $path   = [ getcwd() . "/themes/default/" ];
+	my $path   = [ getcwd() . "/themes/default/", getcwd() . "/view/" ];
 
 	unshift( @{$path}, getcwd() . "/themes/$arg{data}->{site}->{theme}" ) if $arg{data}->{site}->{theme};
 
@@ -48,12 +48,12 @@ sub template {
 
 	$data->{page}->{title} = $arg{title} // $data->{env}->{title};
 
-	my $contents;
+	my $content;
 	
-	$tt->process( 'trail.tt2', { items => $data->{trail} }, \$contents ) if $data->{trail};
-	$tt->process( $fn, $data, \$contents ) || die $tt->error(), "\n";
+	$tt->process( 'trail.tt2', { items => $data->{trail} }, \$content ) if $data->{trail};
+	$tt->process( $fn, $data, \$content ) || die $tt->error(), "\n";
 
-	$data->{contents} = $contents;
+	$data->{content} = $content;
 	
 	$tt->process( '_theme.tt2', $data, \$output ) || die $tt->error();
 
