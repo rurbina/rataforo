@@ -59,8 +59,6 @@ sub dispatch {
 
 	$env->{PATH_INFO} = '/index' if $env->{PATH_INFO} eq '/';
 
-	my ( undef, $method, @params ) = split '/', $env->{PATH_INFO};
-
 	my $req     = CGI::PSGI->new($env);
 	my $session = {};
 
@@ -70,6 +68,15 @@ sub dispatch {
 	}
 
 	my $c = controller->new( $env, $req, $session );
+
+	my ( $method, @params ) = eval {
+		my @parts = split '/', $env->{PATH_INFO};
+		shift @parts;
+		if ( exists &{"controller::$parts[0]_$parts[1]"} ) {
+			return ( join('_', shift(@parts), shift(@parts) ), @parts);
+		}
+		return ( shift(@parts), @parts );
+	};
 
 	if ( exists &{"controller::$method"} ) {
 
@@ -90,6 +97,11 @@ sub dispatch {
 				$status  = 302;
 				$headers = [ Location => $data->{redirect} ];
 				$data    = "Location: $data->{redirect}";
+			}
+			elsif ( $data->{text} ) {
+				$status  = $data->{status} // 200;
+				$headers = [ 'Content-Type' => 'text/plain' ];
+				$data    = $data->{text};
 			}
 			else {
 				my $out = output->new();
