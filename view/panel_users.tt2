@@ -1,0 +1,2 @@
+<h1>[% l('control_panel') %] : [% l('users') %]</h1>
+

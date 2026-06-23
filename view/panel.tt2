@@ -1,0 +1,32 @@
+<h1>[% l('control_panel') %]</h1>
+
+<h2>[% l('general_settings') %]</h2>
+
+<table width=100%>
+[% FOREACH key = settings.keys.sort %][% SET setting = { name => key, value => settings.$key } %]
+<tr>
+	<th width=30% align=right>[% l('setting_' _ setting.name) %]</th>
+	<td>[% setting.value %]
+</td>
+[% END %]
+</table>
+
+<h2>[% l('boards') %]</h2>
+
+<table width=100%>
+<tr>
+	<th>[% l('board_id') %]</th>
+	<th>[% l('title') %]</th>
+	<th>[% l('description') %]</th>
+	<th>[% l('sort_index') %]</th>
+</tr>
+[% FOREACH board = boards %]
+<tr>
+	<td>[% board.board_id %]</td>
+	<td>[% board.title %]</td>
+	<td>[% board.description %]</td>
+	<td>[% board.sort %]</td>
+</tr>
+[% END %]
+</table>
+
