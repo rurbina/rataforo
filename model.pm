@@ -17,7 +17,7 @@ sub new {
 
 	my %arg = @_;
 
-	$arg{db} //= 'rataforo.db';
+	$arg{db} //= $ENV{RATAFORO_DB} // 'rataforo.db';
 
 	my $s = {
 		dbh => undef,
@@ -120,7 +120,16 @@ sub get_site {
 
 	my ($s) = @_;
 
-	my $site = {};
+	my $site = {
+		title                      => 'title',
+		require_email_confirmation => 1,
+		threads_per_page           => 25,
+		site_url                   => 'http://localhost/',
+		register_instructions      => 'REGISTER_INSTRUCTIONS',
+		email_from                 => 'root@localhost',
+		description                => 'my site description',
+		dark_mode                  => 0,
+	};
 
 	my $sql = qq{
 	select key,value from settings
@@ -158,7 +167,7 @@ sub get_boards {
 	}
 
 	my $sql = qq{
-	select board_id, title, description
+	select board_id, title, description, sort
 	    from boards
 	    where 1=1
 	    $sql_board_id
@@ -211,7 +220,7 @@ sub get_boards {
 		$sth->finish();
 	}
 
-	return $boards;
+	return wantarray ? @{$boards} : $boards;
 
 }
 
@@ -311,7 +320,7 @@ sub get_threads {
 
 	}
 
-	return $threads;
+	return wantarray ? @{$threads} : $threads;
 
 }
 
