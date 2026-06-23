@@ -9,12 +9,18 @@ use Try::Tiny;
 use Data::Dumper qw(Dumper);
 $Data::Dumper::Sortkeys = 1;
 
+our %path_map = ( '/panel/users' => 'panel_users', );
+
+our %access_map = (
+	'panel'       => 'admin',
+	'panel_users' => 'admin',
+);
+
 sub new {
 
 	my ( $class, $env, $req, $ses ) = @_;
 
 	my $self = {
-		out => output->new(),
 		m   => model->new(),
 		d   => {
 			env      => $env,
@@ -134,6 +140,8 @@ sub board {
 sub thread {
 
 	my ( $s, $board_id, $thread_id ) = @_;
+
+	$s->{d}->{main}->{class} = 'thread';
 
 	$s->{d}->{thread} = $s->{m}->get_thread( thread_id => $thread_id, get_replies => 1 )
 	  or die 'thread not found';
@@ -426,6 +434,34 @@ sub register_finish {
 
 }
 
+############################################################
+
+sub panel {
+
+	my ($s) = @_;
+
+	$s->{d}->{settings} = { %{ $s->{d}->{site} } };
+
+	$s->{d}->{boards} = $s->{m}->get_boards();
+
+	$s->push_trail( { href => qq{/panel}, title => $s->l('control_panel') }, );
+
+	return;
+}
+
+sub panel_users {
+
+	my ($s) = @_;
+
+	$s->{d}->{users} = $s->{m}->get_users();
+
+	$s->push_trail( { href => qq{/panel}, title => $s->l('control_panel') }, { href => qq{/panel/users}, title => $s->l('users') } );
+
+	return;
+}
+
+############################################################
+
 sub chpw {
 
 	my ($s) = @_;
@@ -500,7 +536,7 @@ sub dumper {
 
 	$s->{d}->{data} = $data;
 
-	$s->{out}->template( filename => 'dumper', title => 'Dumper', data => $s->{d} );
+	return;
 
 }
 
@@ -510,7 +546,7 @@ sub ipcheck {
 
 	my $text = $s->{d}->{env}->{HTTP_X_REAL_IP} // $s->{d}->{env}->{REMOTE_ADDR};
 
-	$s->{out}->text($text);
+	return { text => $text };
 
 }
 
