@@ -17,7 +17,7 @@ sub new {
 
 	my %arg = @_;
 
-	$arg{db} //= $ENV{RATAFORO_DB} // 'rataforo.db';
+	my $db = $arg{db} //= $ENV{RATAFORO_DB} // 'rataforo.db';
 
 	my $s = {
 		dbh => undef,
@@ -25,7 +25,7 @@ sub new {
 	};
 
 	$s->{dbh} = DBI->connect(
-		"dbi:SQLite:dbname=$arg{db}",
+		"dbi:SQLite:dbname=$db",
 		"", "",
 		{
 			RaiseError     => 1,
@@ -218,6 +218,55 @@ sub get_boards {
 		}
 
 		$sth->finish();
+	}
+
+	if ( $arg{get_new} ) {
+
+		my $user_id = $arg{user_id};
+
+		my %hashed_boards;
+		foreach my $board ( @{$boards} ) {
+			$hashed_boards{ $board->{board_id} } = $board;
+			$board->{new_threads} = 0;
+			$board->{new_replies} = 0;
+			$board->{new_activity} = 0;
+		}
+
+		my $in_marks = join( ',', map { '?' } keys %hashed_boards );
+		my @params   = keys %hashed_boards;
+
+		push @params;
+
+		my $sql = qq{
+		    select threads.board_id,'new_threads'
+		    from threads
+		    where threads.board_id in ($in_marks)
+		    and threads.author != ?
+		    and not exists (select 1 from seen_threads where seen_threads.thread_id = threads.thread_id)
+		    group by threads.board_id
+
+		    union all
+
+		    select threads.board_id,'new_replies'
+		    from replies
+		    join threads using (thread_id)
+		    left join seen_threads on seen_threads.thread_id = threads.thread_id and seen_threads.user_id = ?
+		    where threads.board_id in ($in_marks)
+		    and ( seen_threads.timestamp is null or seen_threads.timestamp < replies.timestamp )
+		    group by threads.board_id
+		    };
+
+		my $sth = $s->{dbh}->prepare($sql);
+		$sth->execute(@params, $user_id, $user_id, @params);
+
+		while ( my ($unseen_id, $key) = $sth->fetchrow_array() ) {
+			$hashed_boards{$unseen_id}->{$key} = 1;
+		}
+
+		$sth->finish();
+
+		$_->{new_activity} = !!( $_->{new_threads} || $_->{new_replies} ) foreach @{$boards};
+
 	}
 
 	return wantarray ? @{$boards} : $boards;

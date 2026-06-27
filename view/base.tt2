@@ -136,12 +136,13 @@ dl.boards dd a {
     color: var(--color-a2);
 }
 dl.boards dd>* {
-    padding: 8px;
+    margin: 8px;
 }
 dl.boards dd:nth-child(even) {
     background: var(--color-bg2alt);
 }
-dl.boards dd .new_posts { width: 5%;  }
+dl.boards dd .new_posts { width: 2em; text-align: right; font-size: 100%; color: var(--color-fg2);  }
+dl.boards dd .new_posts.new { color: var(--color-bg1); }
 dl.boards dd .title     { width: 55%; }
 dl.boards dd .stats     { width: 10%; font-size: 80%; }
 dl.boards dd .last_post { width: 30%; font-size: 80%; }

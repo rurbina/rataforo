@@ -104,7 +104,7 @@ sub index {
 
 	my ($s) = @_;
 
-	$s->{d}->{boards} = $s->{m}->get_boards( get_last_reply => 1, get_stats => 1 );
+	$s->{d}->{boards} = $s->{m}->get_boards( get_last_reply => 1, get_stats => 1, get_new => 1, user_id => $s->{session}->{user}->{user_id} );
 
 	$s->set_title( $s->l('board_index') );
 

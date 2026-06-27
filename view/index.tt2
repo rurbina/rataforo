@@ -2,7 +2,7 @@
   <dt>[% site.title %]</dt>
   [% FOREACH board = boards %]
   <dd>
-    <div class="new_posts">NEW</div>
+    <div class="new_posts [% board.new_activity ? 'new' : '' %]">⬤</div>
     <div class="title">
       <div><a href="/board/[% board.board_id %]">[% board.title %]</a></div>
       <div>[% board.description %]</div>
